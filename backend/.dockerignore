@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+*.iml
+.vscode
+*.swp
+
+# Build artifacts
+target/
+
+# Logs
+*.log
+logs/
+
+# Documentation
+README.md
+docs/
+
+# Tests
+src/test/
+
+# Docker files
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Environment files
+.env*
