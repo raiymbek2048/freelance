@@ -98,63 +98,61 @@ export function OrdersListPage() {
         backgroundAttachment: 'fixed',
       }}
     >
-      {/* Dark overlay for better readability */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 100%)'
-        }}
-      />
       <div className="relative min-h-screen">
         <Header />
         <div className="max-w-3xl mx-auto px-4 py-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-white">Все задания</h1>
-            <Link to="/orders/create">
-              <Button size="sm">Создать задание</Button>
-            </Link>
-          </div>
-
-        {/* Search */}
-        <form onSubmit={handleSearch} className="mb-4">
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Поиск заданий..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              />
+          {/* Semi-transparent container */}
+          <div
+            className="rounded-2xl p-4"
+            style={{ backgroundColor: 'rgba(128, 128, 128, 0.4)' }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-xl font-bold text-white">Все задания</h1>
+              <Link to="/orders/create">
+                <Button size="sm">Создать задание</Button>
+              </Link>
             </div>
-            <Button type="submit">Найти</Button>
-          </div>
-        </form>
 
-        {/* City Filter */}
-        <div className="mb-6 flex items-center gap-2 overflow-x-auto pb-2">
-          <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-          {cities.map((city) => (
-            <button
-              key={city}
-              onClick={() => setSelectedCity(city)}
-              className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-                selectedCity === city
-                  ? 'bg-cyan-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {city}
-            </button>
-          ))}
-        </div>
+            {/* Search */}
+            <form onSubmit={handleSearch} className="mb-4">
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Поиск заданий..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+                <Button type="submit">Найти</Button>
+              </div>
+            </form>
 
-        {/* Results count */}
-        <p className="text-sm text-white/80 mb-4">
-          Найдено {ordersData?.totalElements || 0} заданий
-        </p>
+            {/* City Filter */}
+            <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-2">
+              <MapPin className="w-4 h-4 text-white/70 flex-shrink-0" />
+              {cities.map((city) => (
+                <button
+                  key={city}
+                  onClick={() => setSelectedCity(city)}
+                  className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
+                    selectedCity === city
+                      ? 'bg-cyan-500 text-white'
+                      : 'bg-white/80 text-gray-700 hover:bg-white'
+                  }`}
+                >
+                  {city}
+                </button>
+              ))}
+            </div>
+
+            {/* Results count */}
+            <p className="text-sm text-white/80 mb-4">
+              Найдено {ordersData?.totalElements || 0} заданий
+            </p>
 
         {/* Orders List */}
         {isLoading ? (
@@ -333,6 +331,7 @@ export function OrdersListPage() {
             </button>
           </div>
         )}
+          </div>
         </div>
       </div>
     </div>

@@ -74,13 +74,6 @@ export function HomePage() {
         backgroundAttachment: 'fixed',
       }}
     >
-      {/* Dark overlay for better readability */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 100%)'
-        }}
-      />
 
       {/* Header */}
       <Header />
@@ -98,28 +91,31 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="px-4 py-2 relative z-10">
-        <div className="flex items-center justify-center gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                activeTab === tab.key
-                  ? 'bg-cyan-500 text-white'
-                  : 'text-cyan-600 hover:bg-cyan-100'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Orders List */}
+      {/* Semi-transparent container for content - like Figma */}
       <div className="px-4 pb-8 relative z-10">
-        <div className="max-w-lg mx-auto space-y-2">
+        <div
+          className="max-w-lg mx-auto rounded-2xl p-4"
+          style={{ backgroundColor: 'rgba(128, 128, 128, 0.4)' }}
+        >
+          {/* Filter Tabs */}
+          <div className="flex items-center justify-center gap-2 mb-4">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                  activeTab === tab.key
+                    ? 'bg-cyan-500 text-white'
+                    : 'bg-white/80 text-gray-700 hover:bg-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Orders List */}
+          <div className="space-y-2">
           {orders.length === 0 ? (
             <div className="bg-white rounded-lg p-6 text-center shadow-sm">
               <p className="text-gray-400 text-sm">Задачи не найдены</p>
@@ -243,14 +239,15 @@ export function HomePage() {
             })
           )}
 
-          {/* View All Button */}
-          <div className="pt-4">
-            <Link
-              to="/orders"
-              className="block w-full py-3 bg-cyan-500 text-white text-center text-sm font-medium rounded-lg hover:bg-cyan-600 transition-colors"
-            >
-              Смотреть все задачи
-            </Link>
+            {/* View All Button */}
+            <div className="pt-4">
+              <Link
+                to="/orders"
+                className="block w-full py-3 bg-cyan-500 text-white text-center text-sm font-medium rounded-lg hover:bg-cyan-600 transition-colors"
+              >
+                Смотреть все задачи
+              </Link>
+            </div>
           </div>
         </div>
       </div>
