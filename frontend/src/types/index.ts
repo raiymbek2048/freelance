@@ -10,6 +10,7 @@ export interface User {
   hideFromExecutorList: boolean;
   emailVerified: boolean;
   phoneVerified: boolean;
+  executorVerified: boolean;
   role: UserRole;
   active: boolean;
   createdAt: string;

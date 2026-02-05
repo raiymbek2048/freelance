@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
+import { OAuthCallbackPage } from '@/pages/auth/OAuthCallbackPage';
 import { OrdersListPage } from '@/pages/orders/OrdersListPage';
 import { OrderDetailPage } from '@/pages/orders/OrderDetailPage';
 import { CreateOrderPage } from '@/pages/orders/CreateOrderPage';
@@ -89,6 +90,7 @@ function AppContent() {
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
       <Route path="/orders" element={<OrdersListPage />} />
       <Route path="/orders/:id" element={<OrderDetailPage />} />
       <Route path="/executors" element={<ExecutorsListPage />} />

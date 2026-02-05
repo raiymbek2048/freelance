@@ -1,6 +1,7 @@
 package kg.freelance.entity;
 
 import jakarta.persistence.*;
+import kg.freelance.entity.enums.AuthProvider;
 import kg.freelance.entity.enums.ProfileVisibility;
 import kg.freelance.entity.enums.UserRole;
 import lombok.*;
@@ -30,11 +31,19 @@ public class User {
     @Column(unique = true, length = 20)
     private String phone;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash")
     private String passwordHash;
 
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
+
+    @Column(name = "google_id")
+    private String googleId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", nullable = false)
+    @Builder.Default
+    private AuthProvider authProvider = AuthProvider.LOCAL;
 
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;

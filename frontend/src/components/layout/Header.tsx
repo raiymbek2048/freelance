@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Menu, X, User, LogOut, Settings, Briefcase, MessageSquare, Plus, Shield } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Briefcase, MessageSquare, Plus, Shield, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useChatStore } from '@/stores/chatStore';
 import { Button, Avatar } from '@/components/ui';
@@ -109,6 +109,13 @@ export function Header() {
                         >
                           <Shield className="w-4 h-4" />
                           Верификация
+                          {user?.executorVerified ? (
+                            <CheckCircle className="w-4 h-4 text-green-500 ml-auto" />
+                          ) : (
+                            <span className="ml-auto text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
+                              Не пройдена
+                            </span>
+                          )}
                         </Link>
                         <Link
                           to="/profile"
@@ -228,10 +235,17 @@ export function Header() {
                 </Link>
                 <Link
                   to="/verification"
-                  className="block text-gray-600 hover:text-gray-900 font-medium"
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Верификация
+                  {user?.executorVerified ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
+                      Не пройдена
+                    </span>
+                  )}
                 </Link>
                 {user?.role === 'ADMIN' && (
                   <Link

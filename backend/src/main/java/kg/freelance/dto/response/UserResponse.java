@@ -21,6 +21,7 @@ public class UserResponse {
     private Boolean hideFromExecutorList;
     private Boolean emailVerified;
     private Boolean phoneVerified;
+    private Boolean executorVerified;
     private UserRole role;
     private LocalDateTime createdAt;
     private Boolean hasExecutorProfile;

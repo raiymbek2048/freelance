@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { User, Shield, Eye, EyeOff, Save } from 'lucide-react';
+import { User, Shield, Eye, EyeOff, Save, Mail, Phone, CheckCircle, Send } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { Button, Card, Input, Toggle } from '@/components/ui';
 import { useAuthStore } from '@/stores/authStore';
 import { usersApi } from '@/api/users';
 import type { UpdateProfileRequest } from '@/api/users';
 import { Navigate, Link } from 'react-router-dom';
+import { contactVerificationApi, type ContactVerificationType } from '@/api/contactVerification';
 
 export function ProfilePage() {
   const { user, isAuthenticated, fetchUser } = useAuthStore();
@@ -17,12 +18,65 @@ export function ProfilePage() {
   const [hideFromExecutorList, setHideFromExecutorList] = useState(user?.hideFromExecutorList || false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // Contact verification states
+  const [emailCode, setEmailCode] = useState('');
+  const [phoneCode, setPhoneCode] = useState('');
+  const [emailCodeSent, setEmailCodeSent] = useState(false);
+  const [phoneCodeSent, setPhoneCodeSent] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [verificationSuccess, setVerificationSuccess] = useState<string | null>(null);
+
   const updateMutation = useMutation({
     mutationFn: (data: UpdateProfileRequest) => usersApi.updateProfile(data),
     onSuccess: () => {
       fetchUser();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
+    },
+  });
+
+  const sendCodeMutation = useMutation({
+    mutationFn: (type: ContactVerificationType) => contactVerificationApi.sendCode(type),
+    onSuccess: (_, type) => {
+      if (type === 'EMAIL') {
+        setEmailCodeSent(true);
+      } else {
+        setPhoneCodeSent(true);
+      }
+      setVerificationError(null);
+      setVerificationSuccess('Код отправлен');
+      setTimeout(() => setVerificationSuccess(null), 3000);
+    },
+    onError: (error: Error) => {
+      setVerificationError(error.message || 'Ошибка отправки кода');
+      setTimeout(() => setVerificationError(null), 5000);
+    },
+  });
+
+  const verifyCodeMutation = useMutation({
+    mutationFn: ({ type, code }: { type: ContactVerificationType; code: string }) =>
+      contactVerificationApi.verifyCode(type, code),
+    onSuccess: (response, { type }) => {
+      if (response.success) {
+        fetchUser();
+        if (type === 'EMAIL') {
+          setEmailCodeSent(false);
+          setEmailCode('');
+        } else {
+          setPhoneCodeSent(false);
+          setPhoneCode('');
+        }
+        setVerificationSuccess('Успешно подтверждено!');
+        setVerificationError(null);
+        setTimeout(() => setVerificationSuccess(null), 3000);
+      } else {
+        setVerificationError(response.message);
+        setTimeout(() => setVerificationError(null), 5000);
+      }
+    },
+    onError: (error: Error) => {
+      setVerificationError(error.message || 'Неверный код');
+      setTimeout(() => setVerificationError(null), 5000);
     },
   });
 
@@ -84,6 +138,123 @@ export function ProfilePage() {
               <div className="text-sm text-gray-500">
                 Email: <span className="font-medium text-gray-700">{user?.email}</span>
               </div>
+            </div>
+          </Card>
+
+          {/* Contact Verification */}
+          <Card padding="lg">
+            <div className="flex items-center gap-3 mb-6">
+              <CheckCircle className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-semibold">Подтверждение контактов</h2>
+            </div>
+
+            {verificationError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                {verificationError}
+              </div>
+            )}
+            {verificationSuccess && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg">
+                {verificationSuccess}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* Email Verification */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-gray-500" />
+                  <div>
+                    <p className="font-medium text-gray-900">{user?.email}</p>
+                    <p className="text-sm text-gray-500">Email</p>
+                  </div>
+                </div>
+                {user?.emailVerified ? (
+                  <span className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                    <CheckCircle className="w-4 h-4" />
+                    Подтверждён
+                  </span>
+                ) : emailCodeSent ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={emailCode}
+                      onChange={(e) => setEmailCode(e.target.value)}
+                      placeholder="Код"
+                      className="w-24"
+                      maxLength={6}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => verifyCodeMutation.mutate({ type: 'EMAIL', code: emailCode })}
+                      loading={verifyCodeMutation.isPending}
+                      disabled={emailCode.length !== 6}
+                    >
+                      OK
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => sendCodeMutation.mutate('EMAIL')}
+                    loading={sendCodeMutation.isPending}
+                  >
+                    <Send className="w-4 h-4 mr-1" />
+                    Подтвердить
+                  </Button>
+                )}
+              </div>
+
+              {/* Phone Verification */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-gray-500" />
+                  <div>
+                    <p className="font-medium text-gray-900">{user?.phone || 'Не указан'}</p>
+                    <p className="text-sm text-gray-500">Телефон</p>
+                  </div>
+                </div>
+                {!user?.phone ? (
+                  <span className="text-sm text-gray-400">Укажите телефон выше</span>
+                ) : user?.phoneVerified ? (
+                  <span className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                    <CheckCircle className="w-4 h-4" />
+                    Подтверждён
+                  </span>
+                ) : phoneCodeSent ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={phoneCode}
+                      onChange={(e) => setPhoneCode(e.target.value)}
+                      placeholder="Код"
+                      className="w-24"
+                      maxLength={6}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => verifyCodeMutation.mutate({ type: 'PHONE', code: phoneCode })}
+                      loading={verifyCodeMutation.isPending}
+                      disabled={phoneCode.length !== 6}
+                    >
+                      OK
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => sendCodeMutation.mutate('PHONE')}
+                    loading={sendCodeMutation.isPending}
+                  >
+                    <Send className="w-4 h-4 mr-1" />
+                    Подтвердить
+                  </Button>
+                )}
+              </div>
+
+              <p className="text-xs text-gray-500 mt-2">
+                Подтверждённые контакты повышают доверие к вашему профилю
+              </p>
             </div>
           </Card>
 

@@ -142,6 +142,7 @@ public class AuthServiceImpl implements AuthService {
                 .hideFromExecutorList(user.getHideFromExecutorList())
                 .emailVerified(user.getEmailVerified())
                 .phoneVerified(user.getPhoneVerified())
+                .executorVerified(user.getExecutorVerified())
                 .role(user.getRole())
                 .createdAt(user.getCreatedAt())
                 .hasExecutorProfile(user.getExecutorProfile() != null)
