@@ -1,187 +1,259 @@
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Search, Users, Briefcase, Shield, ArrowRight } from 'lucide-react';
-import { Layout } from '@/components/layout';
-import { Button, Card } from '@/components/ui';
-import { categoriesApi } from '@/api/categories';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ChevronDown, ChevronUp, User, Clock } from 'lucide-react';
+import { Header } from '@/components/layout';
 import { ordersApi } from '@/api/orders';
+import { useAuthStore } from '@/stores/authStore';
+
+type FilterTab = 'open' | 'history' | 'my-ads';
+
+interface ExpandedOrder {
+  id: number;
+  responseText: string;
+}
 
 export function HomePage() {
-  const { data: categories } = useQuery({
-    queryKey: ['categories'],
-    queryFn: categoriesApi.getAll,
-  });
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<FilterTab>('open');
+  const [expandedOrder, setExpandedOrder] = useState<ExpandedOrder | null>(null);
 
   const { data: ordersData } = useQuery({
-    queryKey: ['orders', 'recent'],
-    queryFn: () => ordersApi.getAll({}, 0, 6),
+    queryKey: ['orders', 'home', activeTab],
+    queryFn: () => ordersApi.getAll({}, 0, 10),
   });
 
-  const topCategories = categories?.slice(0, 8) || [];
-  const recentOrders = ordersData?.content || [];
+  const respondMutation = useMutation({
+    mutationFn: ({ orderId, coverLetter }: { orderId: number; coverLetter: string }) =>
+      ordersApi.respond(orderId, { coverLetter }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      setExpandedOrder(null);
+    },
+  });
+
+  const orders = ordersData?.content || [];
+
+  const tabs: { key: FilterTab; label: string }[] = [
+    { key: 'open', label: 'Открытые задания' },
+    { key: 'history', label: 'Моя история' },
+    { key: 'my-ads', label: 'Мои объявления' },
+  ];
+
+  const handleOrderClick = (orderId: number) => {
+    if (expandedOrder?.id === orderId) {
+      setExpandedOrder(null);
+    } else {
+      setExpandedOrder({ id: orderId, responseText: '' });
+    }
+  };
+
+  const handleRespond = (orderId: number) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    if (!expandedOrder?.responseText.trim()) return;
+
+    respondMutation.mutate({
+      orderId,
+      coverLetter: expandedOrder.responseText,
+    });
+  };
 
   return (
-    <Layout>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Найдите исполнителя для любой задачи
-            </h1>
-            <p className="text-xl text-primary-100 mb-8">
-              FreelanceKG — первая биржа фриланса в Кыргызстане. Тысячи специалистов готовы помочь с вашими проектами.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/orders/create">
-                <button className="px-6 py-3 text-base font-medium rounded-lg bg-white text-primary-600 hover:bg-gray-100 transition-colors">
-                  Создать заказ
-                </button>
-              </Link>
-              <Link to="/executors">
-                <button className="px-6 py-3 text-base font-medium rounded-lg border border-white text-white hover:bg-white/10 transition-colors">
-                  Найти исполнителя
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div
+      className="min-h-screen relative"
+      style={{
+        backgroundImage: 'url(/bishkek-bg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center bottom',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      {/* Dark overlay for better readability */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 100%)'
+        }}
+      />
 
-      {/* Search Section */}
-      <section className="py-8 -mt-8">
-        <div className="max-w-3xl mx-auto px-4">
-          <Card padding="sm">
-            <div className="flex items-center gap-3">
-              <Search className="w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Поиск заказов или исполнителей..."
-                className="flex-1 outline-none text-lg"
-              />
-              <Button>Найти</Button>
-            </div>
-          </Card>
-        </div>
-      </section>
+      {/* Header */}
+      <Header />
 
-      {/* Features */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Briefcase className="w-8 h-8 text-primary-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Тысячи заказов</h3>
-              <p className="text-gray-600">
-                Новые заказы каждый день. Найдите работу по своему профилю.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Проверенные исполнители</h3>
-              <p className="text-gray-600">
-                Рейтинги и отзывы помогут выбрать лучшего специалиста.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Безопасные сделки</h3>
-              <p className="text-gray-600">
-                Встроенный чат и система разрешения споров.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Categories */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Популярные категории</h2>
-            <Link to="/categories" className="text-primary-600 hover:underline flex items-center gap-1">
-              Все категории <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {topCategories.map((category) => (
-              <Link key={category.id} to={`/orders?categoryId=${category.id}`}>
-                <Card hover padding="md" className="text-center">
-                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    {category.iconUrl ? (
-                      <img src={category.iconUrl} alt="" className="w-6 h-6" />
-                    ) : (
-                      <Briefcase className="w-6 h-6 text-gray-400" />
-                    )}
-                  </div>
-                  <h3 className="font-medium text-gray-900">{category.name}</h3>
-                  {category.orderCount !== undefined && (
-                    <p className="text-sm text-gray-500 mt-1">{category.orderCount} заказов</p>
-                  )}
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Recent Orders */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Новые заказы</h2>
-            <Link to="/orders" className="text-primary-600 hover:underline flex items-center gap-1">
-              Все заказы <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recentOrders.map((order) => (
-              <Link key={order.id} to={`/orders/${order.id}`}>
-                <Card hover padding="md">
-                  <div className="flex items-start justify-between mb-3">
-                    <span className="text-xs font-medium text-primary-600 bg-primary-50 px-2 py-1 rounded">
-                      {order.categoryName}
-                    </span>
-                    {order.budgetMax && (
-                      <span className="text-sm font-semibold text-gray-900">
-                        до {order.budgetMax.toLocaleString()} сом
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{order.title}</h3>
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>{order.responseCount} откликов</span>
-                    <span>{new Date(order.createdAt).toLocaleDateString('ru')}</span>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 bg-primary-600">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Готовы начать работу?
-          </h2>
-          <p className="text-xl text-primary-100 mb-8">
-            Зарегистрируйтесь бесплатно и найдите первый заказ уже сегодня
+      {/* Site Description Box */}
+      <div className="px-4 pt-6 pb-4 relative z-10">
+        <div className="max-w-lg mx-auto bg-white/90 backdrop-blur rounded-xl p-4 shadow-sm">
+          <h1 className="text-lg font-bold text-cyan-600 text-center mb-2">
+            Исполнители для любых заданий
+          </h1>
+          <p className="text-sm text-gray-600 text-center">
+            Первая биржа фриланса в Кыргызстане. Найдите исполнителя для любой задачи:
+            ремонт, доставка, IT, дизайн и многое другое.
           </p>
-          <Link to="/register">
-            <button className="px-6 py-3 text-base font-medium rounded-lg bg-white text-primary-600 hover:bg-gray-100 transition-colors">
-              Создать аккаунт
-            </button>
-          </Link>
         </div>
-      </section>
-    </Layout>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="px-4 py-2 relative z-10">
+        <div className="flex items-center justify-center gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-cyan-500 text-white'
+                  : 'text-cyan-600 hover:bg-cyan-100'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Orders List */}
+      <div className="px-4 pb-8 relative z-10">
+        <div className="max-w-lg mx-auto space-y-2">
+          {orders.length === 0 ? (
+            <div className="bg-white rounded-lg p-6 text-center shadow-sm">
+              <p className="text-gray-400 text-sm">Задачи не найдены</p>
+            </div>
+          ) : (
+            orders.map((order) => {
+              const isExpanded = expandedOrder?.id === order.id;
+
+              return (
+                <div
+                  key={order.id}
+                  className="bg-white rounded-lg shadow-sm overflow-hidden"
+                >
+                  {/* Order Header - Clickable */}
+                  <div
+                    onClick={() => handleOrderClick(order.id)}
+                    className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-gray-400">
+                        {order.clientName}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {order.deadline && (
+                          <span className="text-xs text-orange-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {new Date(order.deadline).toLocaleDateString('ru')}
+                          </span>
+                        )}
+                        {order.budgetMax && (
+                          <span className="text-xs text-green-600 font-medium">
+                            до {order.budgetMax.toLocaleString()} сом
+                          </span>
+                        )}
+                        {isExpanded ? (
+                          <ChevronUp className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+                    {/* Title - Bold */}
+                    <h3 className="text-sm font-bold text-gray-900 mb-1 break-words line-clamp-2">
+                      {order.title}
+                    </h3>
+                    {/* Description preview */}
+                    {order.description && (
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2 break-words">
+                        {order.description}
+                      </p>
+                    )}
+                    {/* Response count */}
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <span>{order.responseCount} откликов</span>
+                      <span>•</span>
+                      <span>{new Date(order.createdAt).toLocaleDateString('ru')}</span>
+                    </div>
+                  </div>
+
+                  {/* Expanded Content with animation */}
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <div className="border-t border-gray-100 p-4 bg-gray-50">
+                      {/* Client Info */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-cyan-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-800">
+                            {order.clientName}
+                          </p>
+                          <button className="text-xs text-cyan-600 hover:underline">
+                            Посмотреть отзывы
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Response Form */}
+                      <div className="mb-4">
+                        <p className="text-xs text-gray-500 mb-2">
+                          Поздоровайтесь с заказчиком и уточните подробности задания
+                        </p>
+                        <textarea
+                          value={expandedOrder?.responseText || ''}
+                          onChange={(e) =>
+                            expandedOrder && setExpandedOrder({
+                              ...expandedOrder,
+                              responseText: e.target.value,
+                            })
+                          }
+                          placeholder="Напишите сообщение заказчику..."
+                          className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                          rows={3}
+                        />
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setExpandedOrder(null)}
+                          className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                        >
+                          Отказаться
+                        </button>
+                        <button
+                          onClick={() => handleRespond(order.id)}
+                          disabled={!expandedOrder?.responseText.trim() || respondMutation.isPending}
+                          className="px-4 py-2 text-sm bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {respondMutation.isPending ? 'Отправка...' : 'Согласиться'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+
+          {/* View All Button */}
+          <div className="pt-4">
+            <Link
+              to="/orders"
+              className="block w-full py-3 bg-cyan-500 text-white text-center text-sm font-medium rounded-lg hover:bg-cyan-600 transition-colors"
+            >
+              Смотреть все задачи
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

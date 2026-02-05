@@ -1,9 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Menu, X, User, LogOut, Settings, Briefcase, MessageSquare, Plus, Shield, CheckCircle } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Briefcase, MessageSquare, Shield, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useChatStore } from '@/stores/chatStore';
-import { Button, Avatar } from '@/components/ui';
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -28,39 +27,48 @@ export function Header() {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="bg-cyan-500 relative z-10">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex items-center justify-between h-12">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">F</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900">FreelanceKG</span>
+          <Link to="/" className="text-white font-bold text-lg">
+            freelance.kg
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/orders" className="text-gray-600 hover:text-gray-900 font-medium">
-              Заказы
+          <nav className="hidden md:flex items-center gap-1">
+            <Link
+              to="/orders"
+              className="px-3 py-1.5 text-white/90 hover:text-white hover:bg-white/10 rounded text-sm font-medium transition-colors"
+            >
+              Задачи
             </Link>
-            <Link to="/executors" className="text-gray-600 hover:text-gray-900 font-medium">
+            <Link
+              to="/executors"
+              className="px-3 py-1.5 text-white/90 hover:text-white hover:bg-white/10 rounded text-sm font-medium transition-colors"
+            >
               Исполнители
             </Link>
-            <Link to="/categories" className="text-gray-600 hover:text-gray-900 font-medium">
-              Категории
+            <Link
+              to="/vacancies"
+              className="px-3 py-1.5 text-white/90 hover:text-white hover:bg-white/10 rounded text-sm font-medium transition-colors"
+            >
+              Вакансии
+            </Link>
+            <Link
+              to="/ads"
+              className="px-3 py-1.5 text-white/90 hover:text-white hover:bg-white/10 rounded text-sm font-medium transition-colors"
+            >
+              Объявления
             </Link>
           </nav>
 
           {/* Desktop Auth */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2">
             {isAuthenticated ? (
-              <>
-                <Button variant="primary" size="sm" onClick={() => navigate('/orders/create')}>
-                  <Plus className="w-4 h-4 mr-1" />
-                  Создать заказ
-                </Button>
-                <Link to="/chats" className="p-2 text-gray-600 hover:text-gray-900 relative">
+              <div className="flex items-center gap-2">
+                {/* Chat button */}
+                <Link to="/chats" className="p-2 text-white/90 hover:text-white relative">
                   <MessageSquare className="w-5 h-5" />
                   {totalUnreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1">
@@ -68,12 +76,14 @@ export function Header() {
                     </span>
                   )}
                 </Link>
+
+                {/* Profile dropdown */}
                 <div className="relative">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 p-1 rounded-lg hover:bg-gray-100"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white text-cyan-600 text-sm font-medium rounded-full hover:bg-gray-100 transition-colors"
                   >
-                    <Avatar src={user?.avatarUrl} name={user?.fullName} size="sm" />
+                    <span>{user?.fullName || 'Профиль'}</span>
                   </button>
                   {userMenuOpen && (
                     <>
@@ -100,7 +110,7 @@ export function Header() {
                           onClick={() => setUserMenuOpen(false)}
                         >
                           <Briefcase className="w-4 h-4" />
-                          Мои заказы
+                          Мои задания
                         </Link>
                         <Link
                           to="/verification"
@@ -128,7 +138,7 @@ export function Header() {
                         {user?.role === 'ADMIN' && (
                           <Link
                             to="/admin"
-                            className="flex items-center gap-2 px-4 py-2 text-primary-600 hover:bg-gray-50"
+                            className="flex items-center gap-2 px-4 py-2 text-cyan-600 hover:bg-gray-50"
                             onClick={() => setUserMenuOpen(false)}
                           >
                             <Shield className="w-4 h-4" />
@@ -150,80 +160,64 @@ export function Header() {
                     </>
                   )}
                 </div>
-              </>
+              </div>
             ) : (
-              <>
-                <button
-                  onClick={() => navigate('/login')}
-                  className="px-4 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                  Войти
-                </button>
-                <button
-                  onClick={() => navigate('/register')}
-                  className="px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
-                >
-                  Регистрация
-                </button>
-              </>
+              <Link
+                to="/login"
+                className="px-4 py-1.5 bg-white text-cyan-600 text-sm font-medium rounded-full hover:bg-gray-100 transition-colors"
+              >
+                Войти
+              </Link>
             )}
           </div>
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 text-gray-600"
+            className="md:hidden p-2 text-white"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200">
-          <div className="px-4 py-4 space-y-3">
+        <div className="md:hidden border-t border-white/20">
+          <div className="px-4 py-2 space-y-1">
             <Link
               to="/orders"
-              className="block text-gray-600 hover:text-gray-900 font-medium"
+              className="block text-white py-2 text-sm"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Заказы
+              Задачи
             </Link>
             <Link
               to="/executors"
-              className="block text-gray-600 hover:text-gray-900 font-medium"
+              className="block text-white py-2 text-sm"
               onClick={() => setMobileMenuOpen(false)}
             >
               Исполнители
             </Link>
             <Link
-              to="/categories"
-              className="block text-gray-600 hover:text-gray-900 font-medium"
+              to="/vacancies"
+              className="block text-white py-2 text-sm"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Категории
+              Вакансии
             </Link>
-            <hr />
+            <Link
+              to="/ads"
+              className="block text-white py-2 text-sm"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Объявления
+            </Link>
             {isAuthenticated ? (
               <>
                 <Link
-                  to="/profile"
-                  className="block text-gray-600 hover:text-gray-900 font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Профиль
-                </Link>
-                <Link
-                  to="/my-orders"
-                  className="block text-gray-600 hover:text-gray-900 font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Мои заказы
-                </Link>
-                <Link
                   to="/chats"
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium"
+                  className="flex items-center gap-2 text-white py-2 text-sm"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Сообщения
@@ -234,15 +228,29 @@ export function Header() {
                   )}
                 </Link>
                 <Link
+                  to="/profile"
+                  className="block text-white py-2 text-sm"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Профиль
+                </Link>
+                <Link
+                  to="/my-orders"
+                  className="block text-white py-2 text-sm"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Мои задания
+                </Link>
+                <Link
                   to="/verification"
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium"
+                  className="flex items-center gap-2 text-white py-2 text-sm"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Верификация
                   {user?.executorVerified ? (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <CheckCircle className="w-4 h-4 text-green-300" />
                   ) : (
-                    <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
+                    <span className="text-xs bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded">
                       Не пройдена
                     </span>
                   )}
@@ -250,7 +258,7 @@ export function Header() {
                 {user?.role === 'ADMIN' && (
                   <Link
                     to="/admin"
-                    className="block text-primary-600 hover:text-primary-700 font-medium"
+                    className="block text-white py-2 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Админ-панель
@@ -261,26 +269,19 @@ export function Header() {
                     setMobileMenuOpen(false);
                     handleLogout();
                   }}
-                  className="block text-red-600 font-medium"
+                  className="block text-red-200 py-2 text-sm w-full text-left"
                 >
                   Выйти
                 </button>
               </>
             ) : (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => navigate('/login')}
-                  className="flex-1 px-4 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                  Войти
-                </button>
-                <button
-                  onClick={() => navigate('/register')}
-                  className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
-                >
-                  Регистрация
-                </button>
-              </div>
+              <Link
+                to="/login"
+                className="block text-white py-2 text-sm"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Войти
+              </Link>
             )}
           </div>
         </div>

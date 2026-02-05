@@ -14,6 +14,7 @@ public class OrderListResponse {
 
     private Long id;
     private String title;
+    private String description;
     private Long categoryId;
     private String categoryName;
     private Long clientId;

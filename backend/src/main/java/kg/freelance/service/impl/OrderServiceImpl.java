@@ -586,6 +586,7 @@ public class OrderServiceImpl implements OrderService {
         return OrderListResponse.builder()
                 .id(order.getId())
                 .title(order.getTitle())
+                .description(order.getDescription())
                 .categoryId(order.getCategory().getId())
                 .categoryName(order.getCategory().getName())
                 .clientId(order.getClient().getId())

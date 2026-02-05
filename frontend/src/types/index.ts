@@ -100,6 +100,7 @@ export type OrderStatus = 'NEW' | 'IN_PROGRESS' | 'REVISION' | 'ON_REVIEW' | 'CO
 export interface OrderListItem {
   id: number;
   title: string;
+  description: string;
   categoryId: number;
   categoryName: string;
   clientId: number;
