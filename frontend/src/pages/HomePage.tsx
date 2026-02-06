@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, ChevronUp, User, Clock, Menu, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, User, Clock, Menu, X, Shield, AlertTriangle } from 'lucide-react';
 import { ordersApi } from '@/api/orders';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -19,10 +19,12 @@ export function HomePage() {
   const [activeTab, setActiveTab] = useState<FilterTab>('open');
   const [expandedOrder, setExpandedOrder] = useState<ExpandedOrder | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [page, setPage] = useState(0);
 
   const { data: ordersData } = useQuery({
-    queryKey: ['orders', 'home', activeTab],
-    queryFn: () => ordersApi.getAll({}, 0, 10),
+    queryKey: ['orders', 'home', activeTab, page],
+    queryFn: () => ordersApi.getAll({}, page, 10),
   });
 
   const respondMutation = useMutation({
@@ -35,6 +37,13 @@ export function HomePage() {
   });
 
   const orders = ordersData?.content || [];
+  const totalPages = ordersData?.totalPages || 0;
+
+  const handleTabChange = (tab: FilterTab) => {
+    setActiveTab(tab);
+    setPage(0);
+    setExpandedOrder(null);
+  };
 
   const tabs: { key: FilterTab; label: string }[] = [
     { key: 'open', label: 'Открытые задания' },
@@ -50,9 +59,9 @@ export function HomePage() {
       navigate('/login');
       return;
     }
-    // Если не верифицирован - редирект на верификацию
+    // Если не верифицирован - показать модальное окно
     if (!isVerified) {
-      navigate('/verification');
+      setShowVerificationModal(true);
       return;
     }
 
@@ -69,7 +78,7 @@ export function HomePage() {
       return;
     }
     if (!isVerified) {
-      navigate('/verification');
+      setShowVerificationModal(true);
       return;
     }
     if (!expandedOrder?.responseText.trim()) return;
@@ -224,7 +233,7 @@ export function HomePage() {
             {tabs.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => handleTabChange(tab.key)}
                 className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
                   activeTab === tab.key
                     ? 'bg-cyan-500 text-white shadow-md'
@@ -360,8 +369,58 @@ export function HomePage() {
               })
             )}
 
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="pt-4 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="p-2 rounded-lg bg-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-600" />
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i;
+                    } else if (page < 3) {
+                      pageNum = i;
+                    } else if (page > totalPages - 4) {
+                      pageNum = totalPages - 5 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setPage(pageNum)}
+                        className={`w-10 h-10 rounded-lg text-sm font-medium ${
+                          page === pageNum
+                            ? 'bg-cyan-500 text-white'
+                            : 'bg-white shadow-sm hover:bg-gray-50 text-gray-700'
+                        }`}
+                      >
+                        {pageNum + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                  className="p-2 rounded-lg bg-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  <ChevronRight className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+            )}
+
             {/* View All Button */}
-            <div className="pt-2">
+            <div className="pt-4">
               <Link
                 to="/orders"
                 className="block w-full py-3 bg-cyan-500 text-white text-center text-sm font-medium rounded-lg hover:bg-cyan-600 transition-colors"
@@ -372,6 +431,41 @@ export function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Verification Required Modal */}
+      {showVerificationModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+            <div className="flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-amber-600" />
+            </div>
+            <h3 className="text-xl font-bold text-center text-gray-900 mb-2">
+              Требуется верификация
+            </h3>
+            <p className="text-gray-600 text-center mb-6">
+              Чтобы откликаться на задания и видеть полную информацию, необходимо пройти верификацию личности.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowVerificationModal(false)}
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              >
+                Позже
+              </button>
+              <button
+                onClick={() => {
+                  setShowVerificationModal(false);
+                  navigate('/verification');
+                }}
+                className="flex-1 px-4 py-2.5 bg-cyan-500 text-white rounded-lg font-medium hover:bg-cyan-600 transition-colors flex items-center justify-center gap-2"
+              >
+                <Shield className="w-4 h-4" />
+                Пройти верификацию
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, MapPin, ChevronDown, ChevronUp, User, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, MapPin, ChevronDown, ChevronUp, User, Clock, ChevronLeft, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/layout';
 import { Card } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
@@ -35,6 +35,7 @@ export function OrdersListPage() {
   const [expandedOrder, setExpandedOrder] = useState<ExpandedOrder | null>(null);
   const [selectedCity, setSelectedCity] = useState('Все города');
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   const filters: OrderFilters = {
     search: searchParams.get('search') || undefined,
@@ -70,9 +71,9 @@ export function OrdersListPage() {
       navigate('/login');
       return;
     }
-    // Если не верифицирован - редирект на верификацию
+    // Если не верифицирован - показать модальное окно
     if (!isVerified) {
-      navigate('/verification');
+      setShowVerificationModal(true);
       return;
     }
 
@@ -89,7 +90,7 @@ export function OrdersListPage() {
       return;
     }
     if (!isVerified) {
-      navigate('/verification');
+      setShowVerificationModal(true);
       return;
     }
     if (!expandedOrder?.responseText.trim()) return;
@@ -361,6 +362,41 @@ export function OrdersListPage() {
           </div>
         </div>
       </div>
+
+      {/* Verification Required Modal */}
+      {showVerificationModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+            <div className="flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-amber-600" />
+            </div>
+            <h3 className="text-xl font-bold text-center text-gray-900 mb-2">
+              Требуется верификация
+            </h3>
+            <p className="text-gray-600 text-center mb-6">
+              Чтобы откликаться на задания и видеть полную информацию, необходимо пройти верификацию личности.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowVerificationModal(false)}
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              >
+                Позже
+              </button>
+              <button
+                onClick={() => {
+                  setShowVerificationModal(false);
+                  navigate('/verification');
+                }}
+                className="flex-1 px-4 py-2.5 bg-cyan-500 text-white rounded-lg font-medium hover:bg-cyan-600 transition-colors flex items-center justify-center gap-2"
+              >
+                <Shield className="w-4 h-4" />
+                Пройти верификацию
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
