@@ -95,13 +95,13 @@ export function HomePage() {
                 to="/vacancies"
                 className="px-4 py-2 bg-white/90 text-gray-700 rounded-lg text-sm font-medium hover:bg-white transition-colors"
               >
-                Вакансии
+                Вакансия
               </Link>
               <Link
-                to="/partners"
+                to="/ads"
                 className="px-4 py-2 bg-white/90 text-gray-700 rounded-lg text-sm font-medium hover:bg-white transition-colors"
               >
-                Партнёр
+                Объявление
               </Link>
             </nav>
 
@@ -149,7 +149,10 @@ export function HomePage() {
               Задания
             </Link>
             <Link to="/vacancies" className="block text-white py-2" onClick={() => setMobileMenuOpen(false)}>
-              Вакансии
+              Вакансия
+            </Link>
+            <Link to="/ads" className="block text-white py-2" onClick={() => setMobileMenuOpen(false)}>
+              Объявление
             </Link>
             <Link to="/orders/create" className="block text-white py-2" onClick={() => setMobileMenuOpen(false)}>
               Дать задание
@@ -161,11 +164,11 @@ export function HomePage() {
         )}
       </header>
 
-      {/* Hero Section - Cyan background */}
-      <div className="bg-cyan-500 pb-8">
-        <div className="max-w-4xl mx-auto px-4 pt-6">
-          <div className="flex items-start justify-between">
-            <div>
+      {/* Hero Section - Separate cyan card */}
+      <div className="max-w-3xl mx-auto px-4 pt-6">
+        <div className="bg-cyan-500 rounded-2xl p-6 md:p-8">
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
                 Исполнители для<br />любых заданий
               </h1>
@@ -173,41 +176,40 @@ export function HomePage() {
                 Тысячи исполнителей готовы выполнить любое ваше задание
               </p>
             </div>
-            <div className="hidden md:block text-right">
-              <span className="text-white/60 text-lg font-medium">FREELANCE KG</span>
+            {/* Right side branding */}
+            <div className="hidden md:block">
+              <span className="text-white/70 text-lg font-medium">FREELANCE KG</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="max-w-4xl mx-auto px-4 -mt-4 relative z-10">
-        <div className="flex items-center justify-center gap-4 mb-6">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === tab.key
-                  ? 'text-gray-900 border-b-2 border-cyan-500'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Cards Container - Light frosted glass effect */}
-      <div className="max-w-4xl mx-auto px-4 pb-8">
+      <div className="max-w-3xl mx-auto px-4 pb-8 mt-4 relative z-10">
         <div
-          className="rounded-2xl p-4"
+          className="rounded-2xl p-6 pt-8"
           style={{
             backgroundColor: 'rgba(200, 220, 240, 0.5)',
             backdropFilter: 'blur(10px)',
           }}
         >
+          {/* Filter Tabs - Inside container */}
+          <div className="flex items-center justify-center gap-2 mb-6">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                  activeTab === tab.key
+                    ? 'bg-cyan-500 text-white shadow-md'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 hover:shadow-sm'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           <div className="space-y-3">
             {orders.length === 0 ? (
               <div className="bg-white rounded-lg p-6 text-center shadow-sm">

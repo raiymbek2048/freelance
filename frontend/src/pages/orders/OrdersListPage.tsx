@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, MapPin, ChevronDown, ChevronUp, User, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Header } from '@/components/layout';
-import { Button, Card } from '@/components/ui';
+import { Card } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
 import { useAuthStore } from '@/stores/authStore';
 import type { OrderFilters } from '@/types';
@@ -101,16 +101,22 @@ export function OrdersListPage() {
       <div className="relative min-h-screen">
         <Header />
         <div className="max-w-3xl mx-auto px-4 py-6">
-          {/* Semi-transparent container */}
+          {/* Semi-transparent container - Light blue frosted glass like Figma */}
           <div
-            className="rounded-2xl p-4"
-            style={{ backgroundColor: 'rgba(128, 128, 128, 0.4)' }}
+            className="rounded-2xl p-6 pt-8"
+            style={{
+              backgroundColor: 'rgba(200, 220, 240, 0.5)',
+              backdropFilter: 'blur(10px)',
+            }}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-xl font-bold text-white">Все задания</h1>
-              <Link to="/orders/create">
-                <Button size="sm">Создать задание</Button>
+              <h1 className="text-xl font-bold text-gray-800">Все задания</h1>
+              <Link
+                to="/orders/create"
+                className="px-4 py-2 bg-cyan-500 text-white rounded-lg text-sm font-medium hover:bg-cyan-600 transition-colors"
+              >
+                Создать задание
               </Link>
             </div>
 
@@ -127,13 +133,18 @@ export function OrdersListPage() {
                     className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
-                <Button type="submit">Найти</Button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-cyan-500 text-white rounded-lg text-sm font-medium hover:bg-cyan-600 transition-colors"
+                >
+                  Найти
+                </button>
               </div>
             </form>
 
             {/* City Filter */}
             <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-2">
-              <MapPin className="w-4 h-4 text-white/70 flex-shrink-0" />
+              <MapPin className="w-4 h-4 text-gray-600 flex-shrink-0" />
               {cities.map((city) => (
                 <button
                   key={city}
@@ -150,7 +161,7 @@ export function OrdersListPage() {
             </div>
 
             {/* Results count */}
-            <p className="text-sm text-white/80 mb-4">
+            <p className="text-sm text-gray-600 mb-4">
               Найдено {ordersData?.totalElements || 0} заданий
             </p>
 
@@ -288,9 +299,9 @@ export function OrdersListPage() {
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="p-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              className="p-2 rounded-lg bg-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5 text-gray-600" />
             </button>
 
             <div className="flex items-center gap-1">
@@ -313,7 +324,7 @@ export function OrdersListPage() {
                     className={`w-10 h-10 rounded-lg text-sm font-medium ${
                       page === pageNum
                         ? 'bg-cyan-500 text-white'
-                        : 'border border-gray-200 hover:bg-gray-50'
+                        : 'bg-white shadow-sm hover:bg-gray-50 text-gray-700'
                     }`}
                   >
                     {pageNum + 1}
@@ -325,9 +336,9 @@ export function OrdersListPage() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="p-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              className="p-2 rounded-lg bg-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-5 h-5 text-gray-600" />
             </button>
           </div>
         )}
