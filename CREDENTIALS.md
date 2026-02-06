@@ -16,9 +16,9 @@
 ## Доступ к сервисам
 
 ### Приложение
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8080
-- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **Frontend**: http://freelance.kg
+- **Backend API**: http://freelance.kg/api/v1 (проксируется через Nginx)
+- **Swagger UI**: http://localhost:8080/swagger-ui.html (только с сервера)
 
 ### База данных
 - **Host**: localhost
