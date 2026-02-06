@@ -44,6 +44,12 @@ export function Header() {
               Задания
             </Link>
             <Link
+              to="/executors"
+              className="px-4 py-2 bg-white/90 text-gray-700 rounded-lg text-sm font-medium hover:bg-white transition-colors"
+            >
+              Исполнители
+            </Link>
+            <Link
               to="/vacancies"
               className="px-4 py-2 bg-white/90 text-gray-700 rounded-lg text-sm font-medium hover:bg-white transition-colors"
             >
@@ -192,6 +198,13 @@ export function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               Задания
+            </Link>
+            <Link
+              to="/executors"
+              className="block text-white py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Исполнители
             </Link>
             <Link
               to="/vacancies"

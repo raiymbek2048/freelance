@@ -28,7 +28,8 @@ const cities = [
 export function OrdersListPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
+  const isVerified = user?.executorVerified === true;
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(0);
   const [expandedOrder, setExpandedOrder] = useState<ExpandedOrder | null>(null);
@@ -64,6 +65,17 @@ export function OrdersListPage() {
   };
 
   const handleOrderClick = (orderId: number) => {
+    // Если не авторизован - редирект на логин
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    // Если не верифицирован - редирект на верификацию
+    if (!isVerified) {
+      navigate('/verification');
+      return;
+    }
+
     if (expandedOrder?.id === orderId) {
       setExpandedOrder(null);
     } else {
@@ -74,6 +86,10 @@ export function OrdersListPage() {
   const handleRespond = (orderId: number) => {
     if (!isAuthenticated) {
       navigate('/login');
+      return;
+    }
+    if (!isVerified) {
+      navigate('/verification');
       return;
     }
     if (!expandedOrder?.responseText.trim()) return;

@@ -42,7 +42,20 @@ export function HomePage() {
     { key: 'my-ads', label: 'Мои объявления' },
   ];
 
+  const isVerified = user?.executorVerified === true;
+
   const handleOrderClick = (orderId: number) => {
+    // Если не авторизован - редирект на логин
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    // Если не верифицирован - редирект на верификацию
+    if (!isVerified) {
+      navigate('/verification');
+      return;
+    }
+
     if (expandedOrder?.id === orderId) {
       setExpandedOrder(null);
     } else {
@@ -53,6 +66,10 @@ export function HomePage() {
   const handleRespond = (orderId: number) => {
     if (!isAuthenticated) {
       navigate('/login');
+      return;
+    }
+    if (!isVerified) {
+      navigate('/verification');
       return;
     }
     if (!expandedOrder?.responseText.trim()) return;
@@ -90,6 +107,12 @@ export function HomePage() {
                 className="px-4 py-2 bg-white/90 text-gray-700 rounded-lg text-sm font-medium hover:bg-white transition-colors"
               >
                 Задания
+              </Link>
+              <Link
+                to="/executors"
+                className="px-4 py-2 bg-white/90 text-gray-700 rounded-lg text-sm font-medium hover:bg-white transition-colors"
+              >
+                Исполнители
               </Link>
               <Link
                 to="/vacancies"
@@ -147,6 +170,9 @@ export function HomePage() {
           <div className="md:hidden border-t border-white/20 px-4 py-3 space-y-2">
             <Link to="/orders" className="block text-white py-2" onClick={() => setMobileMenuOpen(false)}>
               Задания
+            </Link>
+            <Link to="/executors" className="block text-white py-2" onClick={() => setMobileMenuOpen(false)}>
+              Исполнители
             </Link>
             <Link to="/vacancies" className="block text-white py-2" onClick={() => setMobileMenuOpen(false)}>
               Вакансия
