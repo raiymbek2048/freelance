@@ -43,7 +43,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const token = localStorage.getItem('accessToken');
     if (!token) return;
 
-    const socket = new SockJS('/ws');
+    const wsUrl = import.meta.env.VITE_WS_URL || '/ws';
+    const socket = new SockJS(wsUrl);
     const client = new Client({
       webSocketFactory: () => socket,
       connectHeaders: {

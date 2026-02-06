@@ -3,6 +3,14 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
+# Build args for API URLs
+ARG VITE_API_URL=http://85.113.27.42:1002/api/v1
+ARG VITE_WS_URL=http://85.113.27.42:1002/ws
+
+# Set as env vars for build
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_WS_URL=$VITE_WS_URL
+
 # Copy package files
 COPY package*.json ./
 
