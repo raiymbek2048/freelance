@@ -64,6 +64,9 @@ public class Order {
     @Builder.Default
     private OrderStatus status = OrderStatus.NEW;
 
+    @Column(length = 200)
+    private String location;
+
     @Column(name = "is_public", nullable = false)
     @Builder.Default
     private Boolean isPublic = true;

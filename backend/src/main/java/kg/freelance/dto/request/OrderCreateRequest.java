@@ -32,6 +32,9 @@ public class OrderCreateRequest {
 
     private LocalDate deadline;
 
+    @Size(max = 200, message = "Location must not exceed 200 characters")
+    private String location;
+
     private Boolean isPublic = true;
 
     private List<String> attachments;

@@ -42,7 +42,7 @@ services:
       AWS_SECRET_KEY: ${AWS_SECRET_KEY:-}
       UPLOAD_DIR: /app/uploads
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     ports:
@@ -63,6 +63,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api/v1}
+        VITE_WS_URL: ${VITE_WS_URL:-/ws}
     container_name: freelance-kg-frontend
     restart: unless-stopped
     depends_on:

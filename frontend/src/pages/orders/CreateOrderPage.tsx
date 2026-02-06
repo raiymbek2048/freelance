@@ -4,9 +4,21 @@ import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { MapPin, ChevronDown } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
+
+const cities = [
+  'Бишкек',
+  'Ош',
+  'Джалал-Абад',
+  'Каракол',
+  'Токмок',
+  'Нарын',
+  'Талас',
+  'Баткен',
+];
 
 const orderSchema = z.object({
   title: z.string().min(10, 'Минимум 10 символов').max(100, 'Максимум 100 символов'),
@@ -22,7 +34,8 @@ type OrderForm = z.infer<typeof orderSchema>;
 
 export function CreateOrderPage() {
   const navigate = useNavigate();
-  const [location, setLocation] = useState('Бишкек, Кыргызстан');
+  const [locationEnabled, setLocationEnabled] = useState(true);
+  const [selectedCity, setSelectedCity] = useState('Бишкек');
 
   const createMutation = useMutation({
     mutationFn: ordersApi.create,
@@ -55,6 +68,7 @@ export function CreateOrderPage() {
 
   const onSubmit = (data: OrderForm) => {
     const deadline = `${data.deadlineDate}T${data.deadlineTime}:00`;
+    const location = locationEnabled ? `${selectedCity}, Кыргызстан` : undefined;
     createMutation.mutate({
       title: data.title,
       description: data.description,
@@ -62,6 +76,7 @@ export function CreateOrderPage() {
       budgetMin: data.budgetMin,
       budgetMax: data.budgetMax,
       deadline,
+      location,
       attachments: [],
     });
   };
@@ -76,37 +91,46 @@ export function CreateOrderPage() {
             {/* Location */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                <MapPin className="w-4 h-4 inline mr-1" />
                 Локация
               </label>
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2">
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
-                    checked={!location}
-                    onChange={() => setLocation('')}
-                    className="text-cyan-500"
+                    checked={!locationEnabled}
+                    onChange={() => setLocationEnabled(false)}
+                    className="w-4 h-4 text-cyan-500 focus:ring-cyan-500"
                   />
-                  <span className="text-sm text-gray-600">Задание может выполнить исполнитель из любой локации</span>
+                  <span className="text-sm text-gray-600">Удалённо (любая локация)</span>
                 </label>
-              </div>
-              <div className="mt-2 flex items-center gap-4">
-                <label className="flex items-center gap-2">
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
-                    checked={!!location}
-                    onChange={() => setLocation('Бишкек, Кыргызстан')}
-                    className="text-cyan-500"
+                    checked={locationEnabled}
+                    onChange={() => setLocationEnabled(true)}
+                    className="w-4 h-4 text-cyan-500 focus:ring-cyan-500"
                   />
-                  <span className="text-sm text-gray-600">Город</span>
+                  <span className="text-sm text-gray-600">Указать город</span>
                 </label>
-                {location && (
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
-                    placeholder="Бишкек, Кыргызстан"
-                  />
+                {locationEnabled && (
+                  <div className="flex gap-3 ml-6">
+                    <div className="relative">
+                      <select
+                        value={selectedCity}
+                        onChange={(e) => setSelectedCity(e.target.value)}
+                        className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
+                      >
+                        {cities.map((city) => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                    <div className="flex items-center px-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-600">
+                      Кыргызстан
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

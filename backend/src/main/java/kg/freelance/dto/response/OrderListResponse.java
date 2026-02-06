@@ -22,6 +22,7 @@ public class OrderListResponse {
     private BigDecimal budgetMin;
     private BigDecimal budgetMax;
     private LocalDate deadline;
+    private String location;
     private OrderStatus status;
     private Integer responseCount;
     private LocalDateTime createdAt;

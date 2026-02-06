@@ -108,6 +108,7 @@ export interface OrderListItem {
   budgetMin?: number;
   budgetMax?: number;
   deadline?: string;
+  location?: string;
   status: OrderStatus;
   responseCount: number;
   createdAt: string;
@@ -129,6 +130,7 @@ export interface OrderDetail {
   budgetMin?: number;
   budgetMax?: number;
   agreedPrice?: number;
+  location?: string;
   deadline?: string;
   agreedDeadline?: string;
   status: OrderStatus;
@@ -174,6 +176,7 @@ export interface OrderCreateRequest {
   budgetMin?: number;
   budgetMax?: number;
   deadline?: string;
+  location?: string;
   attachments?: string[];
 }
 

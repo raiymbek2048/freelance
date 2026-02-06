@@ -3,9 +3,9 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Build args for API URLs
-ARG VITE_API_URL=https://freelance.kg/api/v1
-ARG VITE_WS_URL=https://freelance.kg/ws
+# Build args for API URLs (default to relative paths for local dev)
+ARG VITE_API_URL=/api/v1
+ARG VITE_WS_URL=/ws
 
 # Set as env vars for build
 ENV VITE_API_URL=$VITE_API_URL

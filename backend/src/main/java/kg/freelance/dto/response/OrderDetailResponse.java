@@ -34,6 +34,9 @@ public class OrderDetailResponse {
     private BigDecimal budgetMax;
     private BigDecimal agreedPrice;
 
+    // Location
+    private String location;
+
     // Dates
     private LocalDate deadline;
     private LocalDate agreedDeadline;

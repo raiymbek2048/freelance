@@ -51,7 +51,16 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div
+      className="min-h-screen flex items-center justify-center py-12 px-4"
+      style={{
+        backgroundImage: 'url(/bishkek-bg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center bottom',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <Card className="w-full max-w-md" padding="lg">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
@@ -101,7 +110,7 @@ export function LoginPage() {
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">или</span>
+              <span className="px-2 bg-gray-50 text-gray-500">или</span>
             </div>
           </div>
 
