@@ -17,6 +17,8 @@ import { ExecutorDetailPage } from '@/pages/executors/ExecutorDetailPage';
 import { ChatPage } from '@/pages/chat/ChatPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { VerificationPage } from '@/pages/VerificationPage';
+import { VacanciesPage } from '@/pages/VacanciesPage';
+import { AdsPage } from '@/pages/AdsPage';
 import {
   AdminDashboardPage,
   AdminDisputesPage,
@@ -95,6 +97,8 @@ function AppContent() {
       <Route path="/orders/:id" element={<OrderDetailPage />} />
       <Route path="/executors" element={<ExecutorsListPage />} />
       <Route path="/executors/:id" element={<ExecutorDetailPage />} />
+      <Route path="/vacancies" element={<VacanciesPage />} />
+      <Route path="/ads" element={<AdsPage />} />
 
       {/* Protected routes */}
       <Route

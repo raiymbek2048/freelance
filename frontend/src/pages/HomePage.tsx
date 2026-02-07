@@ -23,8 +23,17 @@ export function HomePage() {
   const [page, setPage] = useState(0);
 
   const { data: ordersData } = useQuery({
-    queryKey: ['orders', 'home', activeTab, page],
-    queryFn: () => ordersApi.getAll({}, page, 10),
+    queryKey: ['orders', 'home', activeTab, page, isAuthenticated],
+    queryFn: () => {
+      if (activeTab === 'history' && isAuthenticated) {
+        return ordersApi.getMyOrdersAsExecutor(page, 10);
+      }
+      if (activeTab === 'my-ads' && isAuthenticated) {
+        return ordersApi.getMyOrdersAsClient(page, 10);
+      }
+      return ordersApi.getAll({}, page, 10);
+    },
+    enabled: activeTab === 'open' || isAuthenticated,
   });
 
   const respondMutation = useMutation({
@@ -246,9 +255,38 @@ export function HomePage() {
           </div>
 
           <div className="space-y-3">
-            {orders.length === 0 ? (
+            {/* Show login prompt for personal tabs when not authenticated */}
+            {(activeTab === 'history' || activeTab === 'my-ads') && !isAuthenticated ? (
+              <div className="bg-white rounded-lg p-8 text-center shadow-sm">
+                <p className="text-gray-600 mb-4">
+                  {activeTab === 'history'
+                    ? 'Войдите, чтобы увидеть задания, на которые вы откликнулись'
+                    : 'Войдите, чтобы увидеть ваши объявления'}
+                </p>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-6 py-2 bg-cyan-500 text-white rounded-lg font-medium hover:bg-cyan-600 transition-colors"
+                >
+                  Войти
+                </button>
+              </div>
+            ) : orders.length === 0 ? (
               <div className="bg-white rounded-lg p-6 text-center shadow-sm">
-                <p className="text-gray-400 text-sm">Задачи не найдены</p>
+                <p className="text-gray-400 text-sm">
+                  {activeTab === 'history'
+                    ? 'Вы ещё не откликались на задания'
+                    : activeTab === 'my-ads'
+                    ? 'У вас пока нет объявлений'
+                    : 'Задачи не найдены'}
+                </p>
+                {activeTab === 'my-ads' && (
+                  <button
+                    onClick={() => navigate('/orders/create')}
+                    className="mt-4 px-6 py-2 bg-cyan-500 text-white rounded-lg font-medium hover:bg-cyan-600 transition-colors"
+                  >
+                    Создать задание
+                  </button>
+                )}
               </div>
             ) : (
               orders.map((order) => {
