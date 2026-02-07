@@ -47,6 +47,7 @@ export function VerificationPage() {
   const [passportPreview, setPassportPreview] = useState<string | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [consentGiven, setConsentGiven] = useState(false);
 
   const { data: status, isLoading } = useQuery({
     queryKey: ['verification-status'],
@@ -80,8 +81,16 @@ export function VerificationPage() {
       setPassportPreview(null);
       setSelfiePreview(null);
     },
-    onError: (error: Error) => {
-      setUploadError(error.message);
+    onError: (error: unknown) => {
+      // Check for 413 Payload Too Large error
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status?: number } };
+        if (axiosError.response?.status === 413) {
+          setUploadError('Размер файла не должен превышать 10 МБ');
+          return;
+        }
+      }
+      setUploadError(error instanceof Error ? error.message : 'Произошла ошибка при загрузке');
     },
   });
 
@@ -243,21 +252,45 @@ export function VerificationPage() {
               </div>
             </div>
 
+            {/* Privacy Notice */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="flex items-start gap-2">
+                <Shield className="w-5 h-5 text-cyan-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-1">Конфиденциальность данных</h4>
+                  <p className="text-sm text-gray-600">
+                    Ваши паспортные данные будут использованы исключительно для подтверждения личности.
+                    Мы гарантируем полную конфиденциальность — данные хранятся в зашифрованном виде
+                    и не будут переданы третьим лицам.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Consent Checkbox */}
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={consentGiven}
+                onChange={(e) => setConsentGiven(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
+              />
+              <span className="text-sm text-gray-700">
+                Я подтверждаю, что предоставленные данные являются достоверными, и даю согласие
+                на их обработку в целях верификации моей личности.
+              </span>
+            </label>
+
             <Button
               className="w-full"
               size="lg"
               onClick={() => submitMutation.mutate()}
               loading={submitMutation.isPending}
-              disabled={!passportFile || !selfieFile}
+              disabled={!passportFile || !selfieFile || !consentGiven}
             >
               <Upload className="w-5 h-5 mr-2" />
               Отправить на верификацию
             </Button>
-
-            <p className="text-xs text-gray-500 text-center">
-              Ваши данные будут использованы только для подтверждения личности
-              и не будут переданы третьим лицам.
-            </p>
           </div>
         )}
       </div>
