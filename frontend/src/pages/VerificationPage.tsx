@@ -166,7 +166,7 @@ export function VerificationPage() {
 
         {/* Submit Form */}
         {canSubmit && (
-          <div className="space-y-6">
+          <div className="bg-white rounded-2xl p-6 shadow-lg space-y-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h3 className="font-medium text-blue-900 mb-2">Как пройти верификацию</h3>
               <ol className="list-decimal list-inside text-sm text-blue-800 space-y-1">
@@ -253,12 +253,12 @@ export function VerificationPage() {
             </div>
 
             {/* Privacy Notice */}
-            <div className="bg-cyan-50 border-2 border-cyan-400 rounded-lg p-4">
+            <div className="bg-cyan-50 border border-cyan-300 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <Shield className="w-6 h-6 text-cyan-700 flex-shrink-0" />
+                <Shield className="w-6 h-6 text-cyan-600 flex-shrink-0" />
                 <div>
-                  <h4 className="font-bold text-black mb-2">Конфиденциальность данных</h4>
-                  <p className="text-sm text-black leading-relaxed">
+                  <h4 className="font-semibold text-gray-900 mb-1">Конфиденциальность данных</h4>
+                  <p className="text-sm text-gray-700 leading-relaxed">
                     Ваши паспортные данные будут использованы исключительно для подтверждения личности.
                     Мы гарантируем полную конфиденциальность — данные хранятся в зашифрованном виде
                     и не будут переданы третьим лицам.
@@ -268,14 +268,14 @@ export function VerificationPage() {
             </div>
 
             {/* Consent Checkbox */}
-            <label className="flex items-start gap-3 cursor-pointer bg-amber-50 p-4 rounded-lg border-2 border-amber-400 hover:bg-amber-100 transition-colors">
+            <label className="flex items-start gap-3 cursor-pointer p-4 rounded-lg border border-gray-300 hover:border-cyan-400 hover:bg-gray-50 transition-colors">
               <input
                 type="checkbox"
                 checked={consentGiven}
                 onChange={(e) => setConsentGiven(e.target.checked)}
-                className="mt-0.5 w-5 h-5 rounded border-2 border-gray-600 text-cyan-600 focus:ring-cyan-500 cursor-pointer accent-cyan-600"
+                className="mt-0.5 w-5 h-5 rounded border-gray-400 text-cyan-600 focus:ring-cyan-500 cursor-pointer accent-cyan-600"
               />
-              <span className="text-sm text-black leading-relaxed">
+              <span className="text-sm text-gray-700 leading-relaxed">
                 Я подтверждаю, что предоставленные данные являются достоверными, и даю согласие
                 на их обработку в целях верификации моей личности.
               </span>
