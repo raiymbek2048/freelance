@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, User, Clock, Menu, X, Shield, AlertTriangle } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, User, Clock, Menu, X, Shield, AlertTriangle, MessageSquare } from 'lucide-react';
 import { ordersApi } from '@/api/orders';
 import { useAuthStore } from '@/stores/authStore';
+import { useChatStore } from '@/stores/chatStore';
 import type { OrderStatus, OrderListItem } from '@/types';
 
 type FilterTab = 'open' | 'history' | 'my-ads';
@@ -49,11 +50,22 @@ export function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuthStore();
+  const { totalUnreadCount, connected, connect, fetchChatRooms } = useChatStore();
   const [activeTab, setActiveTab] = useState<FilterTab>('open');
   const [expandedOrder, setExpandedOrder] = useState<ExpandedOrder | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [page, setPage] = useState(0);
+
+  // Connect to WebSocket and fetch chat rooms when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (!connected) {
+        connect();
+      }
+      fetchChatRooms();
+    }
+  }, [isAuthenticated]);
 
   const { data: ordersData } = useQuery({
     queryKey: ['orders', 'home', activeTab, page, isAuthenticated],
@@ -194,13 +206,24 @@ export function HomePage() {
                 Дать задание
               </Link>
               {isAuthenticated ? (
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-                >
-                  <User className="w-4 h-4" />
-                  {user?.fullName || 'Профиль'}
-                </Link>
+                <>
+                  {/* Chat button */}
+                  <Link to="/chats" className="p-2 text-white/90 hover:text-white relative">
+                    <MessageSquare className="w-5 h-5" />
+                    {totalUnreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1">
+                        {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    <User className="w-4 h-4" />
+                    {user?.fullName || 'Профиль'}
+                  </Link>
+                </>
               ) : (
                 <Link
                   to="/login"
@@ -240,9 +263,29 @@ export function HomePage() {
             <Link to="/orders/create" className="block text-white py-2" onClick={() => setMobileMenuOpen(false)}>
               Дать задание
             </Link>
-            <Link to="/login" className="block text-white py-2" onClick={() => setMobileMenuOpen(false)}>
-              Войти
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to="/chats"
+                  className="flex items-center gap-2 text-white py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Сообщения
+                  {totalUnreadCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1">
+                      {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+                    </span>
+                  )}
+                </Link>
+                <Link to="/profile" className="block text-white py-2" onClick={() => setMobileMenuOpen(false)}>
+                  Профиль
+                </Link>
+              </>
+            ) : (
+              <Link to="/login" className="block text-white py-2" onClick={() => setMobileMenuOpen(false)}>
+                Войти
+              </Link>
+            )}
           </div>
         )}
       </header>
