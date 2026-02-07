@@ -35,6 +35,7 @@ public class OrderController {
             @RequestParam(required = false) BigDecimal budgetMin,
             @RequestParam(required = false) BigDecimal budgetMax,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String location,
             @RequestParam(defaultValue = "newest") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -47,7 +48,7 @@ public class OrderController {
 
         Pageable pageable = PageRequest.of(page, size, sorting);
         PageResponse<OrderListResponse> response = orderService.getPublicOrders(
-                categoryId, budgetMin, budgetMax, search, pageable);
+                categoryId, budgetMin, budgetMax, search, location, pageable);
 
         return ResponseEntity.ok(response);
     }

@@ -41,9 +41,9 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public PageResponse<OrderListResponse> getPublicOrders(
             Long categoryId, BigDecimal budgetMin, BigDecimal budgetMax,
-            String search, Pageable pageable) {
+            String search, String location, Pageable pageable) {
 
-        Page<Order> page = orderRepository.findPublicOrders(categoryId, budgetMin, budgetMax, search, pageable);
+        Page<Order> page = orderRepository.findPublicOrders(categoryId, budgetMin, budgetMax, search, location, pageable);
 
         List<OrderListResponse> content = page.getContent().stream()
                 .map(this::mapToListResponse)

@@ -292,6 +292,7 @@ export interface OrderFilters {
   minBudget?: number;
   maxBudget?: number;
   search?: string;
+  location?: string;
 }
 
 export interface ExecutorFilters {

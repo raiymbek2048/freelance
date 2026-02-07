@@ -39,10 +39,11 @@ export function OrdersListPage() {
 
   const filters: OrderFilters = {
     search: searchParams.get('search') || undefined,
+    location: selectedCity !== 'Все города' ? selectedCity : undefined,
   };
 
   const { data: ordersData, isLoading } = useQuery({
-    queryKey: ['orders', filters, page],
+    queryKey: ['orders', filters, page, selectedCity],
     queryFn: () => ordersApi.getAll(filters, page, 10),
   });
 
@@ -165,7 +166,10 @@ export function OrdersListPage() {
               {cities.map((city) => (
                 <button
                   key={city}
-                  onClick={() => setSelectedCity(city)}
+                  onClick={() => {
+                    setSelectedCity(city);
+                    setPage(0);
+                  }}
                   className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
                     selectedCity === city
                       ? 'bg-cyan-500 text-white'

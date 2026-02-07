@@ -9,6 +9,7 @@ export const ordersApi = {
     if (filters.minBudget) params.append('budgetMin', String(filters.minBudget));
     if (filters.maxBudget) params.append('budgetMax', String(filters.maxBudget));
     if (filters.search) params.append('search', filters.search);
+    if (filters.location) params.append('location', filters.location);
     params.append('page', String(page));
     params.append('size', String(size));
 

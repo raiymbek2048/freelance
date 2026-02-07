@@ -24,6 +24,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             AND (:budgetMin IS NULL OR o.budgetMax >= :budgetMin)
             AND (:budgetMax IS NULL OR o.budgetMin <= :budgetMax)
             AND (:search IS NULL OR o.title LIKE %:search% OR o.description LIKE %:search%)
+            AND (:location IS NULL OR o.location LIKE %:location%)
             ORDER BY o.createdAt DESC
             """)
     Page<Order> findPublicOrders(
@@ -31,6 +32,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             @Param("budgetMin") BigDecimal budgetMin,
             @Param("budgetMax") BigDecimal budgetMax,
             @Param("search") String search,
+            @Param("location") String location,
             Pageable pageable
     );
 
