@@ -253,12 +253,12 @@ export function VerificationPage() {
             </div>
 
             {/* Privacy Notice */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <div className="flex items-start gap-2">
-                <Shield className="w-5 h-5 text-cyan-600 flex-shrink-0 mt-0.5" />
+            <div className="bg-white border border-cyan-200 rounded-lg p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <Shield className="w-6 h-6 text-cyan-600 flex-shrink-0" />
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-1">Конфиденциальность данных</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4 className="font-semibold text-gray-900 mb-2">Конфиденциальность данных</h4>
+                  <p className="text-sm text-gray-800 leading-relaxed">
                     Ваши паспортные данные будут использованы исключительно для подтверждения личности.
                     Мы гарантируем полную конфиденциальность — данные хранятся в зашифрованном виде
                     и не будут переданы третьим лицам.
@@ -268,14 +268,14 @@ export function VerificationPage() {
             </div>
 
             {/* Consent Checkbox */}
-            <label className="flex items-start gap-3 cursor-pointer">
+            <label className="flex items-start gap-3 cursor-pointer bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:border-cyan-300 transition-colors">
               <input
                 type="checkbox"
                 checked={consentGiven}
                 onChange={(e) => setConsentGiven(e.target.checked)}
-                className="mt-1 w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
+                className="mt-0.5 w-5 h-5 rounded border-2 border-gray-400 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
               />
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-gray-800 leading-relaxed">
                 Я подтверждаю, что предоставленные данные являются достоверными, и даю согласие
                 на их обработку в целях верификации моей личности.
               </span>
