@@ -406,7 +406,7 @@ export function ChatPage() {
               </button>
               <button
                 onClick={() => {
-                  window.open('https://wa.me/996700000000', '_blank');
+                  window.open('https://wa.me/996888444999', '_blank');
                   setShowSupportModal(false);
                 }}
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-[#25D366] text-white rounded-xl font-medium hover:bg-[#22c55e] transition-colors"
