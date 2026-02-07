@@ -56,7 +56,7 @@ export function HomePage() {
 
   const tabs: { key: FilterTab; label: string }[] = [
     { key: 'open', label: 'Открытые задания' },
-    { key: 'history', label: 'Моя история' },
+    { key: 'history', label: 'Мои отклики' },
     { key: 'my-ads', label: 'Мои объявления' },
   ];
 
