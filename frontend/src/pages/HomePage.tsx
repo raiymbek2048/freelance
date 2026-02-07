@@ -475,14 +475,14 @@ export function HomePage() {
                               Посмотреть отклики
                             </button>
                           </div>
-                        ) : (order.hasResponded || respondedOrders.has(order.id)) ? (
+                        ) : (activeTab === 'history' || order.hasResponded || respondedOrders.has(order.id)) ? (
                           <div className="text-center py-4">
                             <p className="text-green-600 font-medium">Отклик отправлен</p>
                             <button
-                              onClick={() => setExpandedOrder(null)}
-                              className="mt-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                              onClick={() => navigate(`/orders/${order.id}`)}
+                              className="mt-2 px-4 py-2 text-sm bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors"
                             >
-                              Закрыть
+                              Посмотреть заказ
                             </button>
                           </div>
                         ) : (
