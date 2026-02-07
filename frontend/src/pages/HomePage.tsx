@@ -465,7 +465,17 @@ export function HomePage() {
                         </div>
 
                         {/* Response Form or Already Responded Message */}
-                        {(order.hasResponded || respondedOrders.has(order.id)) ? (
+                        {order.clientId === user?.id ? (
+                          <div className="text-center py-4">
+                            <p className="text-gray-500">Это ваш заказ</p>
+                            <button
+                              onClick={() => navigate(`/orders/${order.id}`)}
+                              className="mt-2 px-4 py-2 text-sm bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors"
+                            >
+                              Посмотреть отклики
+                            </button>
+                          </div>
+                        ) : (order.hasResponded || respondedOrders.has(order.id)) ? (
                           <div className="text-center py-4">
                             <p className="text-green-600 font-medium">Отклик отправлен</p>
                             <button
