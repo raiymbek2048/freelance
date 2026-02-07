@@ -20,6 +20,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             SELECT o FROM Order o
             WHERE o.isPublic = true
             AND o.status = kg.freelance.entity.enums.OrderStatus.NEW
+            AND (o.deadline IS NULL OR o.deadline >= CURRENT_DATE)
             AND (:categoryId IS NULL OR o.category.id = :categoryId)
             AND (:budgetMin IS NULL OR o.budgetMax >= :budgetMin)
             AND (:budgetMax IS NULL OR o.budgetMin <= :budgetMax)

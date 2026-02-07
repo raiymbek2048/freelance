@@ -96,6 +96,12 @@ export function HomePage() {
   const isVerified = user?.executorVerified === true;
 
   const handleOrderClick = (orderId: number) => {
+    // Для "Мои объявления" - переходим на страницу заказа
+    if (activeTab === 'my-ads') {
+      navigate(`/orders/${orderId}`);
+      return;
+    }
+
     // Если не авторизован - редирект на логин
     if (!isAuthenticated) {
       navigate('/login');
@@ -379,7 +385,13 @@ export function HomePage() {
                       )}
                       {/* Response count */}
                       <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <span>{order.responseCount} откликов</span>
+                        {activeTab === 'my-ads' && order.responseCount > 0 ? (
+                          <span className="px-2 py-0.5 bg-cyan-500 text-white rounded-full font-medium">
+                            {order.responseCount} {order.responseCount === 1 ? 'отклик' : order.responseCount < 5 ? 'отклика' : 'откликов'}
+                          </span>
+                        ) : (
+                          <span>{order.responseCount} откликов</span>
+                        )}
                         <span>•</span>
                         <span>{new Date(order.createdAt).toLocaleDateString('ru')}</span>
                       </div>
