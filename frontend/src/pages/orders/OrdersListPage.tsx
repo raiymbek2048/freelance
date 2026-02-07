@@ -294,14 +294,14 @@ export function OrdersListPage() {
                           onClick={() => setExpandedOrder(null)}
                           className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded-lg"
                         >
-                          Отказаться
+                          Отмена
                         </button>
                         <button
                           onClick={() => handleRespond(order.id)}
                           disabled={!expandedOrder?.responseText.trim() || respondMutation.isPending}
                           className="px-4 py-2 text-sm bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 disabled:opacity-50"
                         >
-                          {respondMutation.isPending ? 'Отправка...' : 'Согласиться'}
+                          {respondMutation.isPending ? 'Отправка...' : 'Откликнуться'}
                         </button>
                       </div>
                     </div>
