@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Send, MessageSquare, Check, CheckCheck, Paperclip, X, FileText } from 'lucide-react';
+import { Send, MessageSquare, Check, CheckCheck, Paperclip, X, FileText, Headphones } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { Avatar, Input, Button } from '@/components/ui';
 import { useChatStore } from '@/stores/chatStore';
@@ -116,6 +116,27 @@ export function ChatPage() {
             )}
           </div>
           <div className="flex-1 overflow-y-auto">
+            {/* Pinned Support Chat */}
+            <div
+              onClick={() => window.open('https://t.me/freelancekg_support', '_blank')}
+              className="p-4 border-b-2 border-cyan-200 cursor-pointer hover:bg-cyan-50 bg-cyan-50/50"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center">
+                  <Headphones className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900">Freelance Поддержка</p>
+                    <span className="text-xs bg-cyan-500 text-white px-1.5 py-0.5 rounded">Support</span>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Нужна помощь? Напишите нам!
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {chatRooms.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
                 <MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-300" />
