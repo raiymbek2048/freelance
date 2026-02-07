@@ -189,115 +189,166 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu - Sidebar */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/20 px-4 py-3 space-y-2">
-            <Link
-              to="/orders"
-              className="block text-white py-2"
+        <>
+          {/* Backdrop */}
+          <div
+            className="md:hidden fixed inset-0 bg-black/50 z-40"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          {/* Sidebar */}
+          <div className="md:hidden fixed top-0 right-0 h-full w-72 bg-white shadow-xl z-50 overflow-y-auto">
+            {/* Close button */}
+            <button
+              className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Задания
-            </Link>
-            <Link
-              to="/executors"
-              className="block text-white py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Исполнители
-            </Link>
-            <Link
-              to="/vacancies"
-              className="block text-white py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Вакансия
-            </Link>
-            <Link
-              to="/ads"
-              className="block text-white py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Объявление
-            </Link>
-            <Link
-              to="/orders/create"
-              className="block text-white py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Дать задание
-            </Link>
-            {isAuthenticated ? (
-              <>
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* User info */}
+            {isAuthenticated && user ? (
+              <div className="pt-6 pb-4 px-6 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                    {user.avatarUrl ? (
+                      <img src={user.avatarUrl} alt="" className="w-12 h-12 rounded-full object-cover" />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-500" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{user.fullName}</p>
+                    {user.executorVerified && (
+                      <span className="text-xs text-green-600 flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" /> Верифицирован
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-12 pb-4 px-6 border-b border-gray-200">
+                <Link
+                  to="/login"
+                  className="block w-full py-2.5 bg-cyan-500 text-white text-center rounded-lg font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Войти
+                </Link>
+              </div>
+            )}
+
+            {/* Menu items */}
+            <nav className="py-4 px-4">
+              {isAuthenticated && (
+                <>
+                  <Link
+                    to="/profile"
+                    className="block py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Профиль
+                  </Link>
+                  <Link
+                    to="/verification"
+                    className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Верификация
+                    {!user?.executorVerified && (
+                      <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">
+                        Не пройдена
+                      </span>
+                    )}
+                  </Link>
+                </>
+              )}
+              <Link
+                to="/vacancies"
+                className="block py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Вакансия
+              </Link>
+              <Link
+                to="/ads"
+                className="block py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Объявление
+              </Link>
+              <Link
+                to="/orders/create"
+                className="block py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Дать задание
+              </Link>
+              {isAuthenticated && (
                 <Link
                   to="/chats"
-                  className="flex items-center gap-2 text-white py-2 text-sm"
+                  className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Сообщения
                   {totalUnreadCount > 0 && (
-                    <span className="bg-red-500 text-white text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1">
+                    <span className="bg-red-500 text-white text-xs font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full px-1">
                       {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
                     </span>
                   )}
                 </Link>
-                <Link
-                  to="/profile"
-                  className="block text-white py-2 text-sm"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Профиль
-                </Link>
+              )}
+              <Link
+                to="/orders"
+                className="block py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Задания
+              </Link>
+              {isAuthenticated && (
                 <Link
                   to="/my-orders"
-                  className="block text-white py-2 text-sm"
+                  className="block py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Мои задания
                 </Link>
-                <Link
-                  to="/verification"
-                  className="flex items-center gap-2 text-white py-2 text-sm"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Верификация
-                  {user?.executorVerified ? (
-                    <CheckCircle className="w-4 h-4 text-green-300" />
-                  ) : (
-                    <span className="text-xs bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded">
-                      Не пройдена
-                    </span>
-                  )}
-                </Link>
-                {user?.role === 'ADMIN' && (
-                  <Link
-                    to="/admin"
-                    className="block text-white py-2 text-sm"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Админ-панель
-                  </Link>
-                )}
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleLogout();
-                  }}
-                  className="block text-red-200 py-2 text-sm w-full text-left"
-                >
-                  Выйти
-                </button>
-              </>
-            ) : (
+              )}
               <Link
-                to="/login"
-                className="block text-white py-2"
+                to="/executors"
+                className="block py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Войти
+                Исполнители
               </Link>
-            )}
-        </div>
+              {isAuthenticated && user?.role === 'ADMIN' && (
+                <Link
+                  to="/admin"
+                  className="block py-3 px-2 text-cyan-600 hover:bg-gray-50 rounded-lg"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Админ-панель
+                </Link>
+              )}
+              {isAuthenticated && (
+                <>
+                  <hr className="my-3" />
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="block w-full py-3 px-2 text-red-600 hover:bg-gray-50 rounded-lg text-left"
+                  >
+                    Выйти
+                  </button>
+                </>
+              )}
+            </nav>
+          </div>
+        </>
       )}
     </header>
   );
