@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Shield, Upload, CheckCircle, Clock, XCircle, Camera, FileText } from 'lucide-react';
 import { Layout } from '@/components/layout';
@@ -37,7 +37,7 @@ const statusConfig: Record<VerificationStatus, { icon: React.ReactNode; color: s
 };
 
 export function VerificationPage() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user, fetchUser } = useAuthStore();
   const queryClient = useQueryClient();
   const passportInputRef = useRef<HTMLInputElement>(null);
   const selfieInputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +53,17 @@ export function VerificationPage() {
     queryKey: ['verification-status'],
     queryFn: verificationApi.getMyStatus,
     enabled: isAuthenticated,
+    // Refresh every 30 seconds while on PENDING status
+    refetchInterval: (query) =>
+      query.state.data?.status === 'PENDING' ? 30000 : false,
   });
+
+  // Update user data in auth store when verification is approved
+  useEffect(() => {
+    if (status?.status === 'APPROVED' && user && !user.executorVerified) {
+      fetchUser();
+    }
+  }, [status?.status, user, fetchUser]);
 
   const submitMutation = useMutation({
     mutationFn: async () => {
