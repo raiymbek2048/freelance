@@ -189,12 +189,6 @@ export function OrderDetailPage() {
             <Badge variant={statusVariants[order.status]} size="md">
               {statusLabels[order.status]}
             </Badge>
-            <Link
-              to={`/orders?categoryId=${order.categoryId}`}
-              className="text-sm text-primary-600 hover:underline"
-            >
-              {order.categoryName}
-            </Link>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">{order.title}</h1>
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
