@@ -4,11 +4,13 @@ import kg.freelance.dto.request.VerificationSubmitRequest;
 import kg.freelance.dto.response.AdminVerificationResponse;
 import kg.freelance.dto.response.PageResponse;
 import kg.freelance.dto.response.VerificationResponse;
+import kg.freelance.entity.ExecutorProfile;
 import kg.freelance.entity.ExecutorVerification;
 import kg.freelance.entity.User;
 import kg.freelance.entity.enums.VerificationStatus;
 import kg.freelance.exception.BadRequestException;
 import kg.freelance.exception.ResourceNotFoundException;
+import kg.freelance.repository.ExecutorProfileRepository;
 import kg.freelance.repository.ExecutorVerificationRepository;
 import kg.freelance.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import java.time.LocalDateTime;
 public class ExecutorVerificationService {
 
     private final ExecutorVerificationRepository verificationRepository;
+    private final ExecutorProfileRepository executorProfileRepository;
     private final UserRepository userRepository;
 
     public boolean isVerified(Long userId) {
@@ -108,6 +111,15 @@ public class ExecutorVerificationService {
         User user = verification.getUser();
         user.setExecutorVerified(true);
         userRepository.save(user);
+
+        // Create executor profile if not exists
+        if (!executorProfileRepository.existsById(user.getId())) {
+            ExecutorProfile profile = ExecutorProfile.builder()
+                    .user(user)
+                    .availableForWork(true)
+                    .build();
+            executorProfileRepository.save(profile);
+        }
 
         verificationRepository.save(verification);
     }
