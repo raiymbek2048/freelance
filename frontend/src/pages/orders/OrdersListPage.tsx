@@ -221,7 +221,7 @@ export function OrdersListPage() {
                       {order.deadline && (
                         <span className="text-xs text-orange-500 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          Дедлайн: {new Date(order.deadline).toLocaleDateString('ru')}
+                          До {new Date(order.deadline).toLocaleDateString('ru')} {new Date(order.deadline).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
                       {order.budgetMax && (
