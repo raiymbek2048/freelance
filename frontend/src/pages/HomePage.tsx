@@ -4,8 +4,41 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, User, Clock, Menu, X, Shield, AlertTriangle } from 'lucide-react';
 import { ordersApi } from '@/api/orders';
 import { useAuthStore } from '@/stores/authStore';
+import type { OrderStatus, OrderListItem } from '@/types';
 
 type FilterTab = 'open' | 'history' | 'my-ads';
+
+// Status labels for executor's responses
+const getExecutorStatusLabel = (order: OrderListItem): { label: string; color: string } => {
+  // If not selected yet (order is still NEW)
+  if (!order.isExecutorSelected && order.status === 'NEW') {
+    return { label: 'Отклик отправлен', color: 'bg-blue-100 text-blue-700' };
+  }
+  // If selected, show order status
+  return getOrderStatusLabel(order.status);
+};
+
+// Status labels for client's orders
+const getOrderStatusLabel = (status: OrderStatus): { label: string; color: string } => {
+  switch (status) {
+    case 'NEW':
+      return { label: 'Открыто', color: 'bg-green-100 text-green-700' };
+    case 'IN_PROGRESS':
+      return { label: 'В работе', color: 'bg-cyan-100 text-cyan-700' };
+    case 'ON_REVIEW':
+      return { label: 'На проверке', color: 'bg-yellow-100 text-yellow-700' };
+    case 'REVISION':
+      return { label: 'На доработке', color: 'bg-orange-100 text-orange-700' };
+    case 'DISPUTED':
+      return { label: 'В споре', color: 'bg-red-100 text-red-700' };
+    case 'COMPLETED':
+      return { label: 'Выполнено', color: 'bg-emerald-100 text-emerald-700' };
+    case 'CANCELLED':
+      return { label: 'Отменено', color: 'bg-gray-100 text-gray-700' };
+    default:
+      return { label: status, color: 'bg-gray-100 text-gray-700' };
+  }
+};
 
 interface ExpandedOrder {
   id: number;
@@ -291,6 +324,12 @@ export function HomePage() {
             ) : (
               orders.map((order) => {
                 const isExpanded = expandedOrder?.id === order.id;
+                // Get status label for history/my-ads tabs
+                const statusInfo = activeTab === 'history'
+                  ? getExecutorStatusLabel(order)
+                  : activeTab === 'my-ads'
+                  ? getOrderStatusLabel(order.status)
+                  : null;
 
                 return (
                   <div
@@ -302,23 +341,31 @@ export function HomePage() {
                       onClick={() => handleOrderClick(order.id)}
                       className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                     >
-                      <div className="flex items-center justify-end gap-2 mb-2">
-                        {order.deadline && (
-                          <span className="text-xs text-orange-500 flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            Дедлайн: {new Date(order.deadline).toLocaleDateString('ru')}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        {/* Status badge for history/my-ads */}
+                        {statusInfo && (
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                            {statusInfo.label}
                           </span>
                         )}
-                        {order.budgetMax && (
-                          <span className="text-xs text-green-600 font-medium">
-                            до {order.budgetMax.toLocaleString()} сом
-                          </span>
-                        )}
-                        {isExpanded ? (
-                          <ChevronUp className="w-4 h-4 text-gray-400" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-gray-400" />
-                        )}
+                        <div className="flex items-center gap-2 ml-auto">
+                          {order.deadline && (
+                            <span className="text-xs text-orange-500 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              Дедлайн: {new Date(order.deadline).toLocaleDateString('ru')}
+                            </span>
+                          )}
+                          {order.budgetMax && (
+                            <span className="text-xs text-green-600 font-medium">
+                              до {order.budgetMax.toLocaleString()} сом
+                            </span>
+                          )}
+                          {isExpanded ? (
+                            <ChevronUp className="w-4 h-4 text-gray-400" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                          )}
+                        </div>
                       </div>
                       {/* Title - Bold */}
                       <h3 className="text-sm font-bold text-gray-900 mb-1 break-words line-clamp-2">

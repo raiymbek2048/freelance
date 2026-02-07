@@ -26,4 +26,7 @@ public class OrderListResponse {
     private OrderStatus status;
     private Integer responseCount;
     private LocalDateTime createdAt;
+
+    // For executor's response history
+    private Boolean isExecutorSelected;
 }

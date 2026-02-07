@@ -467,13 +467,14 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<OrderListResponse> getMyOrdersAsExecutor(Long executorId, Pageable pageable) {
-        Page<Order> page = orderRepository.findByExecutorIdOrderByCreatedAtDesc(executorId, pageable);
+        // Get all orders where user has responded (including pending and selected)
+        Page<OrderResponse> responsePage = orderResponseRepository.findByExecutorIdOrderByCreatedAtDesc(executorId, pageable);
 
-        List<OrderListResponse> content = page.getContent().stream()
-                .map(this::mapToListResponse)
+        List<OrderListResponse> content = responsePage.getContent().stream()
+                .map(response -> mapToListResponseWithExecutorStatus(response.getOrder(), response.getIsSelected()))
                 .collect(Collectors.toList());
 
-        return PageResponse.of(page, content);
+        return PageResponse.of(responsePage, content);
     }
 
     @Override
@@ -628,6 +629,26 @@ public class OrderServiceImpl implements OrderService {
                 .status(order.getStatus())
                 .responseCount(order.getResponseCount())
                 .createdAt(order.getCreatedAt())
+                .build();
+    }
+
+    private OrderListResponse mapToListResponseWithExecutorStatus(Order order, Boolean isExecutorSelected) {
+        return OrderListResponse.builder()
+                .id(order.getId())
+                .title(order.getTitle())
+                .description(order.getDescription())
+                .categoryId(order.getCategory().getId())
+                .categoryName(order.getCategory().getName())
+                .clientId(order.getClient().getId())
+                .clientName(order.getClient().getFullName())
+                .budgetMin(order.getBudgetMin())
+                .budgetMax(order.getBudgetMax())
+                .deadline(order.getDeadline())
+                .location(order.getLocation())
+                .status(order.getStatus())
+                .responseCount(order.getResponseCount())
+                .createdAt(order.getCreatedAt())
+                .isExecutorSelected(isExecutorSelected)
                 .build();
     }
 

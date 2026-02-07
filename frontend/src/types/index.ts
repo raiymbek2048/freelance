@@ -112,6 +112,8 @@ export interface OrderListItem {
   status: OrderStatus;
   responseCount: number;
   createdAt: string;
+  // For executor's response history
+  isExecutorSelected?: boolean;
 }
 
 // Order detail response (from /api/v1/orders/:id)
