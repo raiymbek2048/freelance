@@ -31,6 +31,7 @@ public class OrderController {
     @GetMapping
     @Operation(summary = "Get public orders", description = "Get paginated list of public orders")
     public ResponseEntity<PageResponse<OrderListResponse>> getPublicOrders(
+            @AuthenticationPrincipal UserPrincipal user,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) BigDecimal budgetMin,
             @RequestParam(required = false) BigDecimal budgetMax,
@@ -46,9 +47,10 @@ public class OrderController {
             default -> Sort.by(Sort.Direction.DESC, "createdAt");
         };
 
+        Long userId = user != null ? user.getId() : null;
         Pageable pageable = PageRequest.of(page, size, sorting);
         PageResponse<OrderListResponse> response = orderService.getPublicOrders(
-                categoryId, budgetMin, budgetMax, search, location, pageable);
+                categoryId, budgetMin, budgetMax, search, location, userId, pageable);
 
         return ResponseEntity.ok(response);
     }

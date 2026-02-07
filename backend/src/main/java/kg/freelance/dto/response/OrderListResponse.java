@@ -29,4 +29,7 @@ public class OrderListResponse {
 
     // For executor's response history
     private Boolean isExecutorSelected;
+
+    // Whether current user has responded to this order
+    private Boolean hasResponded;
 }

@@ -43,12 +43,12 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public PageResponse<OrderListResponse> getPublicOrders(
             Long categoryId, BigDecimal budgetMin, BigDecimal budgetMax,
-            String search, String location, Pageable pageable) {
+            String search, String location, Long userId, Pageable pageable) {
 
         Page<Order> page = orderRepository.findPublicOrders(categoryId, budgetMin, budgetMax, search, location, pageable);
 
         List<OrderListResponse> content = page.getContent().stream()
-                .map(this::mapToListResponse)
+                .map(order -> mapToListResponseWithUserContext(order, userId))
                 .collect(Collectors.toList());
 
         return PageResponse.of(page, content);
@@ -649,6 +649,27 @@ public class OrderServiceImpl implements OrderService {
                 .responseCount(order.getResponseCount())
                 .createdAt(order.getCreatedAt())
                 .isExecutorSelected(isExecutorSelected)
+                .build();
+    }
+
+    private OrderListResponse mapToListResponseWithUserContext(Order order, Long userId) {
+        boolean hasResponded = userId != null && orderResponseRepository.existsByOrderIdAndExecutorId(order.getId(), userId);
+        return OrderListResponse.builder()
+                .id(order.getId())
+                .title(order.getTitle())
+                .description(order.getDescription())
+                .categoryId(order.getCategory().getId())
+                .categoryName(order.getCategory().getName())
+                .clientId(order.getClient().getId())
+                .clientName(order.getClient().getFullName())
+                .budgetMin(order.getBudgetMin())
+                .budgetMax(order.getBudgetMax())
+                .deadline(order.getDeadline())
+                .location(order.getLocation())
+                .status(order.getStatus())
+                .responseCount(order.getResponseCount())
+                .createdAt(order.getCreatedAt())
+                .hasResponded(hasResponded)
                 .build();
     }
 

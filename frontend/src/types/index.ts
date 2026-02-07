@@ -114,6 +114,8 @@ export interface OrderListItem {
   createdAt: string;
   // For executor's response history
   isExecutorSelected?: boolean;
+  // Whether current user has responded
+  hasResponded?: boolean;
 }
 
 // Order detail response (from /api/v1/orders/:id)

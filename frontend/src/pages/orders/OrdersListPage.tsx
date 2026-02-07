@@ -37,6 +37,7 @@ export function OrdersListPage() {
   const [selectedCity, setSelectedCity] = useState('Все города');
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [respondedOrders, setRespondedOrders] = useState<Set<number>>(new Set());
 
   const filters: OrderFilters = {
     search: searchParams.get('search') || undefined,
@@ -51,8 +52,9 @@ export function OrdersListPage() {
   const respondMutation = useMutation({
     mutationFn: ({ orderId, coverLetter }: { orderId: number; coverLetter: string }) =>
       ordersApi.respond(orderId, { coverLetter }),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      setRespondedOrders(prev => new Set(prev).add(variables.orderId));
       setExpandedOrder(null);
     },
   });
@@ -269,41 +271,55 @@ export function OrdersListPage() {
                         </div>
                       </div>
 
-                      {/* Response Form */}
-                      <div className="mb-4">
-                        <p className="text-xs text-gray-500 mb-2">
-                          Поздоровайтесь с заказчиком и уточните подробности задания
-                        </p>
-                        <textarea
-                          value={expandedOrder?.responseText || ''}
-                          onChange={(e) =>
-                            expandedOrder && setExpandedOrder({
-                              ...expandedOrder,
-                              responseText: e.target.value,
-                            })
-                          }
-                          placeholder="Напишите сообщение заказчику..."
-                          className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                          rows={3}
-                        />
-                      </div>
+                      {/* Response Form or Already Responded Message */}
+                      {(order.hasResponded || respondedOrders.has(order.id)) ? (
+                        <div className="text-center py-4">
+                          <p className="text-green-600 font-medium">Отклик отправлен</p>
+                          <button
+                            onClick={() => setExpandedOrder(null)}
+                            className="mt-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                          >
+                            Закрыть
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mb-4">
+                            <p className="text-xs text-gray-500 mb-2">
+                              Поздоровайтесь с заказчиком и уточните подробности задания
+                            </p>
+                            <textarea
+                              value={expandedOrder?.responseText || ''}
+                              onChange={(e) =>
+                                expandedOrder && setExpandedOrder({
+                                  ...expandedOrder,
+                                  responseText: e.target.value,
+                                })
+                              }
+                              placeholder="Напишите сообщение заказчику..."
+                              className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                              rows={3}
+                            />
+                          </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => setExpandedOrder(null)}
-                          className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded-lg"
-                        >
-                          Отмена
-                        </button>
-                        <button
-                          onClick={() => handleRespond(order.id)}
-                          disabled={!expandedOrder?.responseText.trim() || respondMutation.isPending}
-                          className="px-4 py-2 text-sm bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 disabled:opacity-50"
-                        >
-                          {respondMutation.isPending ? 'Отправка...' : 'Откликнуться'}
-                        </button>
-                      </div>
+                          {/* Action Buttons */}
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => setExpandedOrder(null)}
+                              className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded-lg"
+                            >
+                              Отмена
+                            </button>
+                            <button
+                              onClick={() => handleRespond(order.id)}
+                              disabled={!expandedOrder?.responseText.trim() || respondMutation.isPending}
+                              className="px-4 py-2 text-sm bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 disabled:opacity-50"
+                            >
+                              {respondMutation.isPending ? 'Отправка...' : 'Откликнуться'}
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

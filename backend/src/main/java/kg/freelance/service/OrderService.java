@@ -16,6 +16,7 @@ public interface OrderService {
             BigDecimal budgetMax,
             String search,
             String location,
+            Long userId,
             Pageable pageable
     );
 
