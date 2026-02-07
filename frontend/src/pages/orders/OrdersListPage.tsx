@@ -15,6 +15,7 @@ interface ExpandedOrder {
 
 const cities = [
   'Все города',
+  'Удаленно',
   'Бишкек',
   'Ош',
   'Джалал-Абад',

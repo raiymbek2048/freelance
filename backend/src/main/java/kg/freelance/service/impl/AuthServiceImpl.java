@@ -16,6 +16,7 @@ import kg.freelance.repository.UserRepository;
 import kg.freelance.security.UserPrincipal;
 import kg.freelance.security.jwt.JwtTokenProvider;
 import kg.freelance.service.AuthService;
+import kg.freelance.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,6 +37,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -78,6 +80,9 @@ public class AuthServiceImpl implements AuthService {
 
         // Set bidirectional relationship so hasExecutorProfile returns true
         user.setExecutorProfile(executorProfile);
+
+        // Send welcome email
+        emailService.sendWelcomeEmail(user);
 
         return generateAuthResponse(user);
     }

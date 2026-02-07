@@ -7,6 +7,7 @@ import kg.freelance.exception.BadRequestException;
 import kg.freelance.exception.ResourceNotFoundException;
 import kg.freelance.repository.UserRepository;
 import kg.freelance.repository.VerificationCodeRepository;
+import kg.freelance.service.EmailService;
 import kg.freelance.service.VerificationCodeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
 
     private final VerificationCodeRepository verificationCodeRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     private static final int CODE_LENGTH = 6;
     private static final int CODE_EXPIRY_MINUTES = 10;
@@ -41,13 +43,14 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             throw new BadRequestException("Слишком много запросов. Попробуйте позже.");
         }
 
-        // Check if already verified
+        // Check if already verified (skip for PASSWORD_RESET)
         if (type == VerificationType.EMAIL && Boolean.TRUE.equals(user.getEmailVerified())) {
             throw new BadRequestException("Email уже подтверждён");
         }
         if (type == VerificationType.PHONE && Boolean.TRUE.equals(user.getPhoneVerified())) {
             throw new BadRequestException("Телефон уже подтверждён");
         }
+        // PASSWORD_RESET type can always be requested
 
         // Generate code
         String code = generateCode();
@@ -63,9 +66,11 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
 
         verificationCodeRepository.save(verificationCode);
 
-        // Send code (in development, just log it)
+        // Send code
         if (type == VerificationType.EMAIL) {
             sendEmailCode(user.getEmail(), code);
+        } else if (type == VerificationType.PASSWORD_RESET) {
+            sendPasswordResetCode(user.getEmail(), code);
         } else {
             sendSmsCode(user.getPhone(), code);
         }
@@ -90,13 +95,15 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
         verificationCode.setUsed(true);
         verificationCodeRepository.save(verificationCode);
 
-        // Update user verification status
+        // Update user verification status (only for EMAIL and PHONE types)
         if (type == VerificationType.EMAIL) {
             user.setEmailVerified(true);
-        } else {
+            userRepository.save(user);
+        } else if (type == VerificationType.PHONE) {
             user.setPhoneVerified(true);
+            userRepository.save(user);
         }
-        userRepository.save(user);
+        // PASSWORD_RESET type doesn't update any status, just validates the code
 
         log.info("User {} verified their {}", userId, type);
         return true;
@@ -119,11 +126,15 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     }
 
     private void sendEmailCode(String email, String code) {
-        // TODO: Implement real email sending (e.g., via SMTP or SendGrid)
-        // For development, just log the code
-        log.info("=================================================");
-        log.info("VERIFICATION CODE for EMAIL {}: {}", email, code);
-        log.info("=================================================");
+        // Send email via EmailService
+        emailService.sendEmailVerificationCode(email, code);
+        log.info("Verification code sent to email: {}", email);
+    }
+
+    private void sendPasswordResetCode(String email, String code) {
+        // Send password reset email via EmailService
+        emailService.sendPasswordResetCode(email, code);
+        log.info("Password reset code sent to email: {}", email);
     }
 
     private void sendSmsCode(String phone, String code) {

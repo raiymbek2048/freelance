@@ -28,6 +28,7 @@ public class ExecutorVerificationService {
     private final ExecutorVerificationRepository verificationRepository;
     private final ExecutorProfileRepository executorProfileRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public boolean isVerified(Long userId) {
         if (userId == null) return false;
@@ -122,6 +123,9 @@ public class ExecutorVerificationService {
         }
 
         verificationRepository.save(verification);
+
+        // Send email notification
+        emailService.sendVerificationApproved(user);
     }
 
     @Transactional
@@ -138,6 +142,9 @@ public class ExecutorVerificationService {
         verification.setRejectionReason(reason);
 
         verificationRepository.save(verification);
+
+        // Send email notification
+        emailService.sendVerificationRejected(verification.getUser(), reason);
     }
 
     public long countPending() {

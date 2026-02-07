@@ -45,6 +45,10 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@freelance.kg}
+      MAIL_ENABLED: ${MAIL_ENABLED:-true}
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
     volumes:

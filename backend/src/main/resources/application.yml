@@ -29,6 +29,19 @@ spring:
     default-property-inclusion: non_null
     time-zone: Asia/Bishkek
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
   security:
     oauth2:
       client:
@@ -63,6 +76,9 @@ app:
     dir: ${UPLOAD_DIR:/app/uploads}
   base-url: ${APP_BASE_URL:http://localhost:8080}
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  mail:
+    from: ${MAIL_FROM:noreply@freelance.kg}
+    enabled: ${MAIL_ENABLED:false}
 
 aws:
   s3:

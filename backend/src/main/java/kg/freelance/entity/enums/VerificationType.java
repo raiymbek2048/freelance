@@ -2,5 +2,6 @@ package kg.freelance.entity.enums;
 
 public enum VerificationType {
     EMAIL,
-    PHONE
+    PHONE,
+    PASSWORD_RESET
 }

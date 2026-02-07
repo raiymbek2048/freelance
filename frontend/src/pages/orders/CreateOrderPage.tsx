@@ -68,7 +68,7 @@ export function CreateOrderPage() {
 
   const onSubmit = (data: OrderForm) => {
     const deadline = `${data.deadlineDate}T${data.deadlineTime}:00`;
-    const location = locationEnabled ? `${selectedCity}, Кыргызстан` : undefined;
+    const location = locationEnabled ? `${selectedCity}, Кыргызстан` : 'Удаленно';
     createMutation.mutate({
       title: data.title,
       description: data.description,

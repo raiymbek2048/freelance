@@ -8,6 +8,7 @@ import kg.freelance.exception.BadRequestException;
 import kg.freelance.exception.ForbiddenException;
 import kg.freelance.exception.ResourceNotFoundException;
 import kg.freelance.repository.*;
+import kg.freelance.service.EmailService;
 import kg.freelance.service.ExecutorVerificationService;
 import kg.freelance.service.OrderService;
 import kg.freelance.websocket.dto.WsMessage;
@@ -35,6 +36,7 @@ public class OrderServiceImpl implements OrderService {
     private final ChatRoomRepository chatRoomRepository;
     private final MessageRepository messageRepository;
     private final ExecutorVerificationService executorVerificationService;
+    private final EmailService emailService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
@@ -215,6 +217,9 @@ public class OrderServiceImpl implements OrderService {
             profile.setLastActiveAt(LocalDateTime.now());
             executorProfileRepository.save(profile);
         }
+
+        // Send email notification
+        emailService.sendExecutorSelected(executor, order);
     }
 
     @Override
@@ -240,6 +245,9 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStatus(OrderStatus.ON_REVIEW);
         orderRepository.save(order);
+
+        // Send email notification to client
+        emailService.sendWorkSubmittedForReview(order.getClient(), order);
     }
 
     @Override
@@ -262,6 +270,9 @@ public class OrderServiceImpl implements OrderService {
                 profile.setCompletedOrders(profile.getCompletedOrders() + 1);
                 executorProfileRepository.save(profile);
             }
+
+            // Send email notification to executor
+            emailService.sendWorkApproved(order.getExecutor(), order);
         }
     }
 
@@ -316,6 +327,9 @@ public class OrderServiceImpl implements OrderService {
                         wsMessage
                 );
             }
+
+            // Send email notification
+            emailService.sendRevisionRequested(order.getExecutor(), order, reason);
         }
     }
 
@@ -396,6 +410,18 @@ public class OrderServiceImpl implements OrderService {
 
         // Notify all admins about the dispute
         notifyAdminsAboutDispute(order, reason, isClient ? "заказчиком" : "исполнителем");
+
+        // Send email notifications
+        User sender = isClient ? order.getClient() : order.getExecutor();
+        User recipient = isClient ? order.getExecutor() : order.getClient();
+        emailService.sendDisputeOpened(recipient, order, reason);
+        emailService.sendDisputeOpened(sender, order, reason);
+
+        // Email admins
+        List<User> admins = userRepository.findByRole(kg.freelance.entity.enums.UserRole.ADMIN);
+        for (User admin : admins) {
+            emailService.sendDisputeOpened(admin, order, reason);
+        }
     }
 
     private void notifyAdminsAboutDispute(Order order, String reason, String initiatedBy) {
@@ -504,6 +530,9 @@ public class OrderServiceImpl implements OrderService {
 
         // Update response count
         orderRepository.incrementResponseCount(orderId);
+
+        // Send email notification to client
+        emailService.sendNewOrderResponse(order.getClient(), order, executor);
 
         return mapResponseToDto(response);
     }
