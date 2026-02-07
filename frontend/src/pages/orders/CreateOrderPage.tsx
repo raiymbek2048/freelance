@@ -23,8 +23,7 @@ const cities = [
 const orderSchema = z.object({
   title: z.string().min(10, 'Минимум 10 символов').max(100, 'Максимум 100 символов'),
   description: z.string().min(20, 'Минимум 20 символов'),
-  budgetMin: z.number().optional(),
-  budgetMax: z.number().optional(),
+  budget: z.number().optional(),
   deadlineDate: z.string().min(1, 'Укажите дату'),
   deadlineTime: z.string().min(1, 'Укажите время'),
   location: z.string().optional(),
@@ -47,7 +46,6 @@ export function CreateOrderPage() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<OrderForm>({
     resolver: zodResolver(orderSchema),
@@ -58,14 +56,6 @@ export function CreateOrderPage() {
     },
   });
 
-  // Quick time buttons
-  const setQuickDeadline = (hours: number) => {
-    const now = new Date();
-    now.setHours(now.getHours() + hours);
-    setValue('deadlineDate', now.toISOString().split('T')[0]);
-    setValue('deadlineTime', now.toTimeString().slice(0, 5));
-  };
-
   const onSubmit = (data: OrderForm) => {
     const deadline = `${data.deadlineDate}T${data.deadlineTime}:00`;
     const location = locationEnabled ? `${selectedCity}, Кыргызстан` : 'Удаленно';
@@ -73,8 +63,8 @@ export function CreateOrderPage() {
       title: data.title,
       description: data.description,
       categoryId: 1,
-      budgetMin: data.budgetMin,
-      budgetMax: data.budgetMax,
+      budgetMin: data.budget,
+      budgetMax: data.budget,
       deadline,
       location,
       attachments: [],
@@ -162,7 +152,7 @@ export function CreateOrderPage() {
             {/* Deadline */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Срок выполнения
+                Выполнить до
               </label>
               <div className="flex items-center gap-3 flex-wrap">
                 <input
@@ -175,48 +165,21 @@ export function CreateOrderPage() {
                   {...register('deadlineTime')}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 />
-                <button
-                  type="button"
-                  onClick={() => setQuickDeadline(2)}
-                  className="px-3 py-2 border border-cyan-500 text-cyan-500 rounded-lg text-sm hover:bg-cyan-50"
-                >
-                  Через 2 часа
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setQuickDeadline(6)}
-                  className="px-3 py-2 border border-cyan-500 text-cyan-500 rounded-lg text-sm hover:bg-cyan-50"
-                >
-                  Через 6 часов
-                </button>
               </div>
               {(errors.deadlineDate || errors.deadlineTime) && (
                 <p className="text-red-500 text-xs mt-1">Укажите дату и время</p>
               )}
-              <p className="text-xs text-gray-400 mt-2">
-                Укажите дату и время, к которым вам нужен результат задания.
-              </p>
             </div>
 
             {/* Budget */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Стоимость (сом)
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  type="number"
-                  placeholder="От"
-                  error={errors.budgetMin?.message}
-                  {...register('budgetMin', { valueAsNumber: true })}
-                />
-                <Input
-                  type="number"
-                  placeholder="До"
-                  error={errors.budgetMax?.message}
-                  {...register('budgetMax', { valueAsNumber: true })}
-                />
-              </div>
+              <Input
+                label="Стоимость (сом)"
+                type="number"
+                placeholder="Укажите стоимость"
+                error={errors.budget?.message}
+                {...register('budget', { valueAsNumber: true })}
+              />
             </div>
 
             {/* Submit */}
