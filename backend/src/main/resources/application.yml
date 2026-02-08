@@ -7,6 +7,8 @@ spring:
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-init-sql: SET timezone = 'Asia/Bishkek'
 
   jpa:
     hibernate:
@@ -54,6 +56,11 @@ spring:
               - profile
               - openid
 
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
 server:
   port: 8080
   servlet:
@@ -86,6 +93,11 @@ aws:
     region: ${AWS_REGION:eu-central-1}
     access-key: ${AWS_ACCESS_KEY:}
     secret-key: ${AWS_SECRET_KEY:}
+
+management:
+  health:
+    mail:
+      enabled: false
 
 logging:
   level:
