@@ -11,16 +11,25 @@ interface LayoutProps {
 
 export function Layout({ children, showFooter = true, showHeader = true, showBackground = true }: LayoutProps) {
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={showBackground ? {
-        backgroundImage: 'url(/bishkek-bg.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center bottom',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
-      } : undefined}
-    >
+    <div className="min-h-screen flex flex-col relative">
+      {showBackground && (
+        <>
+          {/* Blurred background layer */}
+          <div
+            className="fixed inset-0 -z-10"
+            style={{
+              backgroundImage: 'url(/bishkek-bg.png)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center bottom',
+              backgroundRepeat: 'no-repeat',
+              filter: 'blur(8px)',
+              transform: 'scale(1.1)',
+            }}
+          />
+          {/* Dark overlay */}
+          <div className="fixed inset-0 -z-10 bg-black/50" />
+        </>
+      )}
       {showHeader && <Header />}
       <main className="flex-1">{children}</main>
       {showFooter && <Footer />}

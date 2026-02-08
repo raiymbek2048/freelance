@@ -51,16 +51,21 @@ export function LoginPage() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center py-12 px-4"
-      style={{
-        backgroundImage: 'url(/bishkek-bg.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center bottom',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 relative">
+      {/* Blurred background layer */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          backgroundImage: 'url(/bishkek-bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+          backgroundRepeat: 'no-repeat',
+          filter: 'blur(8px)',
+          transform: 'scale(1.1)',
+        }}
+      />
+      {/* Dark overlay */}
+      <div className="fixed inset-0 -z-10 bg-black/50" />
       <Card className="w-full max-w-md" padding="lg">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">

@@ -154,16 +154,23 @@ export function HomePage() {
   };
 
   return (
-    <div
-      className="min-h-screen relative"
-      style={{
-        backgroundImage: 'url(/bishkek-bg.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center bottom',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
-      }}
-    >
+    <div className="min-h-screen relative">
+      {/* Blurred background layer */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          backgroundImage: 'url(/bishkek-bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+          backgroundRepeat: 'no-repeat',
+          filter: 'blur(8px)',
+          transform: 'scale(1.1)', // Prevent blur edges
+        }}
+      />
+      {/* Dark overlay */}
+      <div
+        className="fixed inset-0 -z-10 bg-black/50"
+      />
       {/* Header - Like Figma */}
       <header className="bg-cyan-500">
         <div className="max-w-6xl mx-auto px-4">
@@ -262,7 +269,7 @@ export function HomePage() {
           <>
             {/* Backdrop */}
             <div
-              className="md:hidden fixed inset-0 bg-black/50 z-40"
+              className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
               onClick={() => setMobileMenuOpen(false)}
             />
             {/* Sidebar */}
@@ -727,7 +734,7 @@ export function HomePage() {
 
       {/* Verification Required Modal */}
       {showVerificationModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
             <div className="flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-amber-600" />

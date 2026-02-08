@@ -109,16 +109,21 @@ export function OrdersListPage() {
   const totalPages = ordersData?.totalPages || 0;
 
   return (
-    <div
-      className="min-h-screen relative"
-      style={{
-        backgroundImage: 'url(/bishkek-bg.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center bottom',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
-      }}
-    >
+    <div className="min-h-screen relative">
+      {/* Blurred background layer */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          backgroundImage: 'url(/bishkek-bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+          backgroundRepeat: 'no-repeat',
+          filter: 'blur(8px)',
+          transform: 'scale(1.1)',
+        }}
+      />
+      {/* Dark overlay */}
+      <div className="fixed inset-0 -z-10 bg-black/50" />
       <div className="relative min-h-screen">
         <Header />
         <div className="max-w-3xl mx-auto px-4 py-6">
@@ -393,7 +398,7 @@ export function OrdersListPage() {
 
       {/* Verification Required Modal */}
       {showVerificationModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
             <div className="flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-amber-600" />
