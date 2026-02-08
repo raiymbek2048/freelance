@@ -8,6 +8,7 @@ import kg.freelance.exception.BadRequestException;
 import kg.freelance.exception.ForbiddenException;
 import kg.freelance.exception.ResourceNotFoundException;
 import kg.freelance.repository.*;
+import kg.freelance.service.ChatService;
 import kg.freelance.service.EmailService;
 import kg.freelance.service.ExecutorVerificationService;
 import kg.freelance.service.OrderService;
@@ -37,6 +38,7 @@ public class OrderServiceImpl implements OrderService {
     private final MessageRepository messageRepository;
     private final ExecutorVerificationService executorVerificationService;
     private final EmailService emailService;
+    private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
@@ -248,6 +250,16 @@ public class OrderServiceImpl implements OrderService {
 
         // Send email notification to client
         emailService.sendWorkSubmittedForReview(order.getClient(), order);
+
+        // Send chat message to client
+        try {
+            var chatRoom = chatService.getOrCreateChatRoom(orderId, executorId, order.getClient().getId());
+            ChatMessageRequest messageRequest = new ChatMessageRequest();
+            messageRequest.setContent("✅ Работа выполнена и отправлена на проверку. Пожалуйста, проверьте результат.");
+            chatService.sendMessageWs(chatRoom.getId(), executorId, messageRequest);
+        } catch (Exception e) {
+            // Log but don't fail the main operation if chat message fails
+        }
     }
 
     @Override
