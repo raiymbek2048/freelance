@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Send, MessageSquare, Check, CheckCheck, Paperclip, X, FileText, Headphones } from 'lucide-react';
+import { Send, MessageSquare, Check, CheckCheck, Paperclip, X, FileText, Headphones, ArrowLeft } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { Avatar, Input, Button } from '@/components/ui';
 import { useChatStore } from '@/stores/chatStore';
@@ -18,6 +18,7 @@ export function ChatPage() {
   const [attachments, setAttachments] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [mobileShowChat, setMobileShowChat] = useState(false);
 
   const { user } = useAuthStore();
   const {
@@ -46,8 +47,18 @@ export function ChatPage() {
   useEffect(() => {
     if (initialChatId && !activeChatId) {
       setActiveChat(Number(initialChatId));
+      setMobileShowChat(true);
     }
   }, [initialChatId, activeChatId]);
+
+  const handleSelectChat = (chatId: number) => {
+    setActiveChat(chatId);
+    setMobileShowChat(true);
+  };
+
+  const handleBackToList = () => {
+    setMobileShowChat(false);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -109,7 +120,7 @@ export function ChatPage() {
     <Layout showFooter={false}>
       <div className="h-[calc(100vh-64px)] flex">
         {/* Chat List */}
-        <div className="w-80 border-r border-gray-200 bg-white flex flex-col">
+        <div className={`w-full md:w-80 border-r border-gray-200 bg-white flex flex-col ${mobileShowChat ? 'hidden md:flex' : 'flex'}`}>
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">Сообщения</h2>
             {!connected && (
@@ -150,7 +161,7 @@ export function ChatPage() {
                 return (
                   <div
                     key={chat.id}
-                    onClick={() => setActiveChat(chat.id)}
+                    onClick={() => handleSelectChat(chat.id)}
                     className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
                       isActive ? 'bg-primary-50' : ''
                     }`}
@@ -191,21 +202,28 @@ export function ChatPage() {
         </div>
 
         {/* Chat Window */}
-        <div className="flex-1 flex flex-col bg-gray-50">
+        <div className={`flex-1 flex flex-col bg-gray-50 ${mobileShowChat ? 'flex' : 'hidden md:flex'}`}>
           {activeChat ? (
             <>
               {/* Chat Header */}
               <div className="p-4 bg-white border-b border-gray-200 flex items-center gap-3">
+                {/* Back button for mobile */}
+                <button
+                  onClick={handleBackToList}
+                  className="md:hidden p-2 -ml-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
+                </button>
                 <Avatar
                   src={activeChat.participantAvatarUrl}
                   name={activeChat.participantName}
                   size="md"
                 />
-                <div>
-                  <p className="font-medium text-gray-900">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-gray-900 truncate">
                     {activeChat.participantName}
                   </p>
-                  <p className="text-sm text-gray-500">{activeChat.orderTitle}</p>
+                  <p className="text-sm text-gray-500 truncate">{activeChat.orderTitle}</p>
                 </div>
               </div>
 
@@ -220,7 +238,7 @@ export function ChatPage() {
                       className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                        className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-4 py-2 ${
                           isOwn
                             ? 'bg-primary-600 text-white'
                             : 'bg-white text-gray-900 shadow-sm'
