@@ -161,16 +161,16 @@ export function ProfilePage() {
 
             <div className="space-y-4">
               {/* Email Verification */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-gray-500" />
-                  <div>
-                    <p className="font-medium text-gray-900">{user?.email}</p>
+              <div className="flex items-center justify-between gap-2 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <Mail className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{user?.email}</p>
                     <p className="text-sm text-gray-500">Email</p>
                   </div>
                 </div>
                 {user?.emailVerified ? (
-                  <span className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                  <span className="flex items-center gap-1 text-green-600 text-sm font-medium flex-shrink-0">
                     <CheckCircle className="w-4 h-4" />
                     Подтверждён
                   </span>
@@ -206,18 +206,18 @@ export function ProfilePage() {
               </div>
 
               {/* Phone Verification */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-gray-500" />
-                  <div>
-                    <p className="font-medium text-gray-900">{user?.phone || 'Не указан'}</p>
+              <div className="flex items-center justify-between gap-2 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <Phone className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{user?.phone || 'Не указан'}</p>
                     <p className="text-sm text-gray-500">Телефон</p>
                   </div>
                 </div>
                 {!user?.phone ? (
-                  <span className="text-sm text-gray-400">Укажите телефон выше</span>
+                  <span className="text-sm text-gray-400 flex-shrink-0">Укажите телефон выше</span>
                 ) : user?.phoneVerified ? (
-                  <span className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                  <span className="flex items-center gap-1 text-green-600 text-sm font-medium flex-shrink-0">
                     <CheckCircle className="w-4 h-4" />
                     Подтверждён
                   </span>
