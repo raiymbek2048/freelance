@@ -237,13 +237,21 @@ export function HomePage() {
               )}
             </div>
 
-            {/* Mobile menu button */}
-            <button
-              className="md:hidden p-2 text-white"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            {/* Mobile: Дать задание button + menu button */}
+            <div className="md:hidden flex items-center gap-2">
+              <Link
+                to="/orders/create"
+                className="px-3 py-1.5 bg-white text-cyan-600 rounded-lg text-sm font-medium"
+              >
+                Дать задание
+              </Link>
+              <button
+                className="p-2 text-white"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
         </div>
 
