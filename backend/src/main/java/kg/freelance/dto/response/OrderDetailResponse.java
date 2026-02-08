@@ -65,4 +65,5 @@ public class OrderDetailResponse {
     // Verification context
     private Boolean descriptionTruncated;
     private Boolean requiresVerification;
+    private Boolean requiresSubscription;
 }

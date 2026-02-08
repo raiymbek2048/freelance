@@ -5,6 +5,7 @@ import {
   Briefcase,
   AlertTriangle,
   Shield,
+  CreditCard,
   LogOut,
   ChevronLeft,
   Menu,
@@ -28,6 +29,7 @@ const navItems = [
   { path: '/admin/orders', icon: Briefcase, label: 'Заказы' },
   { path: '/admin/users', icon: Users, label: 'Пользователи' },
   { path: '/admin/verifications', icon: Shield, label: 'Верификации' },
+  { path: '/admin/subscription', icon: CreditCard, label: 'Подписки' },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {

@@ -8,3 +8,4 @@ export { Modal } from './Modal';
 export { Card, CardHeader, CardTitle, CardContent } from './Card';
 export { Rating } from './Rating';
 export { Toggle } from './Toggle';
+export { AnnouncementBanner } from './AnnouncementBanner';

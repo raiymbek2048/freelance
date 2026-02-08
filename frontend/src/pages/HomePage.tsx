@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, User, Clock, Menu, X, Shield, AlertTriangle, MessageSquare } from 'lucide-react';
 import { Footer } from '@/components/layout';
+import { AnnouncementBanner } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
 import { useAuthStore } from '@/stores/authStore';
 import { useChatStore } from '@/stores/chatStore';
@@ -419,6 +420,9 @@ export function HomePage() {
           </>
         )}
       </header>
+
+      {/* Announcement Banner */}
+      <AnnouncementBanner />
 
       {/* Hero Section - Separate cyan card */}
       <div className="max-w-3xl mx-auto px-4 pt-6">

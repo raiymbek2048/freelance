@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
   Clock, MessageCircle, Eye, Calendar, Check, X, MessageSquare,
-  AlertTriangle, Shield, Edit2, Trash2
+  AlertTriangle, Shield, Edit2, Trash2, CreditCard
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -269,6 +269,27 @@ export function OrderDetailPage() {
                   </div>
                 </div>
               )}
+
+              {/* Subscription Banner */}
+              {order.descriptionTruncated && order.requiresSubscription && (
+                <div className="mt-4 p-4 bg-cyan-50 border border-cyan-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <CreditCard className="w-5 h-5 text-cyan-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-cyan-800">Требуется подписка</h4>
+                      <p className="text-sm text-cyan-700 mt-1">
+                        Для просмотра полного описания заказа и отклика требуется активная подписка.
+                      </p>
+                      <Link
+                        to="/profile"
+                        className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-cyan-800 hover:text-cyan-900"
+                      >
+                        Оформить подписку <CreditCard className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
             </Card>
 
             {/* Responses (for client) */}
@@ -452,7 +473,7 @@ export function OrderDetailPage() {
             )}
 
             {/* Respond Button */}
-            {canRespond && !hasResponded && !order.requiresVerification && (
+            {canRespond && !hasResponded && !order.requiresVerification && !order.requiresSubscription && (
               <Button className="w-full" size="lg" onClick={() => setShowResponseModal(true)}>
                 Откликнуться
               </Button>
@@ -466,6 +487,19 @@ export function OrderDetailPage() {
                   Для отклика необходимо{' '}
                   <Link to="/verification" className="text-primary-600 hover:underline">
                     пройти верификацию
+                  </Link>
+                </p>
+              </div>
+            )}
+            {canRespond && !hasResponded && order.requiresSubscription && !order.requiresVerification && (
+              <div className="space-y-3">
+                <Button className="w-full" size="lg" disabled>
+                  Откликнуться
+                </Button>
+                <p className="text-sm text-center text-gray-500">
+                  Для отклика необходима{' '}
+                  <Link to="/profile" className="text-primary-600 hover:underline">
+                    активная подписка
                   </Link>
                 </p>
               </div>

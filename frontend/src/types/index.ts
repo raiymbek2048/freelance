@@ -150,6 +150,7 @@ export interface OrderDetail {
   hasResponded: boolean;
   descriptionTruncated?: boolean;
   requiresVerification?: boolean;
+  requiresSubscription?: boolean;
 }
 
 // Legacy Order type (for backwards compatibility)
@@ -338,4 +339,56 @@ export interface AdminVerificationResponse {
 
 export interface FileUploadResponse {
   url: string;
+}
+
+// Subscription types
+export type SubscriptionStatus = 'TRIAL' | 'ACTIVE' | 'EXPIRED';
+
+export interface MySubscriptionResponse {
+  hasActiveSubscription: boolean;
+  subscriptionRequired: boolean;
+  status?: SubscriptionStatus;
+  endDate?: string;
+  daysRemaining?: number;
+  price: number;
+  canStartTrial: boolean;
+  trialDays: number;
+}
+
+export interface AnnouncementResponse {
+  message?: string;
+  enabled: boolean;
+}
+
+export interface SubscriptionSettingsResponse {
+  price: number;
+  subscriptionStartDate?: string;
+  trialDays: number;
+  announcementMessage?: string;
+  announcementEnabled: boolean;
+  updatedAt: string;
+}
+
+export interface SubscriptionSettingsRequest {
+  price?: number;
+  subscriptionStartDate?: string;
+  trialDays?: number;
+  announcementMessage?: string;
+  announcementEnabled?: boolean;
+}
+
+export interface UserSubscriptionResponse {
+  id: number;
+  userId: number;
+  userFullName: string;
+  userEmail: string;
+  status: SubscriptionStatus;
+  startDate: string;
+  endDate: string;
+  daysRemaining: number;
+  isActive: boolean;
+}
+
+export interface GrantSubscriptionRequest {
+  days: number;
 }

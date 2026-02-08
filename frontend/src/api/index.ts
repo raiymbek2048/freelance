@@ -5,3 +5,4 @@ export { categoriesApi } from './categories';
 export { executorsApi } from './executors';
 export { ordersApi } from './orders';
 export { chatApi } from './chat';
+export { subscriptionApi, adminSubscriptionApi } from './subscription';

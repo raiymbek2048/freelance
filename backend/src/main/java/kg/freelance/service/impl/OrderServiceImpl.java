@@ -12,6 +12,7 @@ import kg.freelance.service.ChatService;
 import kg.freelance.service.EmailService;
 import kg.freelance.service.ExecutorVerificationService;
 import kg.freelance.service.OrderService;
+import kg.freelance.service.SubscriptionService;
 import kg.freelance.websocket.dto.WsMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,6 +40,7 @@ public class OrderServiceImpl implements OrderService {
     private final ExecutorVerificationService executorVerificationService;
     private final EmailService emailService;
     private final ChatService chatService;
+    private final SubscriptionService subscriptionService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
@@ -530,6 +532,15 @@ public class OrderServiceImpl implements OrderService {
         User executor = userRepository.findById(executorId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", executorId));
 
+        // Check verification and subscription access
+        if (!subscriptionService.canAccessOrders(executor)) {
+            if (!executor.getExecutorVerified()) {
+                throw new ForbiddenException("Требуется верификация для отклика на заказы");
+            } else {
+                throw new ForbiddenException("Требуется активная подписка для отклика на заказы");
+            }
+        }
+
         OrderResponse response = OrderResponse.builder()
                 .order(order)
                 .executor(executor)
@@ -691,18 +702,25 @@ public class OrderServiceImpl implements OrderService {
         boolean hasResponded = userId != null && orderResponseRepository.existsByOrderIdAndExecutorId(order.getId(), userId);
 
         // Check if user can see full description
-        // Full description visible for: owner, executor, or verified users
+        // Full description visible for: owner, executor, or verified users with active subscription (if required)
         boolean isVerified = userId != null && executorVerificationService.isVerified(userId);
-        boolean canSeeFullDescription = isOwner || isExecutor || isVerified;
+        User user = userId != null ? userRepository.findById(userId).orElse(null) : null;
+        boolean hasSubscriptionAccess = user != null && subscriptionService.canAccessOrders(user);
+        boolean canSeeFullDescription = isOwner || isExecutor || (isVerified && hasSubscriptionAccess);
 
         String description = order.getDescription();
         boolean descriptionTruncated = false;
         boolean requiresVerification = false;
+        boolean requiresSubscription = false;
 
         if (!canSeeFullDescription && description != null && description.length() > 200) {
             description = description.substring(0, 200) + "...";
             descriptionTruncated = true;
-            requiresVerification = true;
+            if (!isVerified) {
+                requiresVerification = true;
+            } else if (!hasSubscriptionAccess) {
+                requiresSubscription = true;
+            }
         }
 
         return OrderDetailResponse.builder()
@@ -736,6 +754,7 @@ public class OrderServiceImpl implements OrderService {
                 .hasResponded(hasResponded)
                 .descriptionTruncated(descriptionTruncated)
                 .requiresVerification(requiresVerification)
+                .requiresSubscription(requiresSubscription)
                 .build();
     }
 

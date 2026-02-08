@@ -77,9 +77,6 @@ services:
         condition: service_healthy
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - freelance-network
     healthcheck:
