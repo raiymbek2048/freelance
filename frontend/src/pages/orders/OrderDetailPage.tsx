@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
   Clock, MessageCircle, Eye, Calendar, Check, X, MessageSquare,
-  AlertTriangle, Shield
+  AlertTriangle, Shield, Edit2, Trash2
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -54,10 +54,16 @@ export function OrderDetailPage() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [revisionReason, setRevisionReason] = useState('');
   const [disputeReason, setDisputeReason] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editBudget, setEditBudget] = useState<number | undefined>();
+  const [editDeadline, setEditDeadline] = useState('');
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', id],
@@ -147,6 +153,36 @@ export function OrderDetailPage() {
       setDisputeReason('');
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => ordersApi.delete(Number(id)),
+    onSuccess: () => {
+      navigate('/');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: () => ordersApi.update(Number(id), {
+      title: editTitle,
+      description: editDescription,
+      budgetMax: editBudget,
+      deadline: editDeadline || undefined,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order', id] });
+      setShowEditModal(false);
+    },
+  });
+
+  const openEditModal = () => {
+    if (order) {
+      setEditTitle(order.title);
+      setEditDescription(order.description);
+      setEditBudget(order.budgetMax);
+      setEditDeadline(order.deadline ? order.deadline.split('T')[0] : '');
+      setShowEditModal(true);
+    }
+  };
 
   const isClient = order?.isOwner ?? false;
   const isExecutor = order?.isExecutor ?? false;
@@ -379,6 +415,29 @@ export function OrderDetailPage() {
               </div>
             </Card>
 
+            {/* Edit/Delete buttons for client */}
+            {isClient && order.status === 'NEW' && (
+              <Card padding="md">
+                <h3 className="text-sm font-medium text-gray-500 mb-3">Управление заказом</h3>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={openEditModal}
+                  >
+                    <Edit2 className="w-4 h-4 mr-2" /> Редактировать
+                  </Button>
+                  <Button
+                    variant="danger"
+                    className="w-full"
+                    onClick={() => setShowDeleteModal(true)}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" /> Удалить
+                  </Button>
+                </div>
+              </Card>
+            )}
+
             {/* Executor (if selected) */}
             {order.executorId && (
               <Card padding="md">
@@ -544,6 +603,75 @@ export function OrderDetailPage() {
           </Button>
           <Button variant="danger" onClick={() => disputeMutation.mutate()} loading={disputeMutation.isPending}>
             Открыть спор
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Удалить заказ"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-700">
+              Вы уверены, что хотите удалить этот заказ? Это действие нельзя отменить.
+              Все отклики также будут удалены.
+            </p>
+          </div>
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
+            Отмена
+          </Button>
+          <Button variant="danger" onClick={() => deleteMutation.mutate()} loading={deleteMutation.isPending}>
+            Удалить
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Редактировать заказ"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <Input
+            label="Название"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            placeholder="Название задания"
+          />
+          <Textarea
+            label="Описание"
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.target.value)}
+            placeholder="Подробное описание задания"
+            rows={5}
+          />
+          <Input
+            label="Бюджет (сом)"
+            type="number"
+            value={editBudget || ''}
+            onChange={(e) => setEditBudget(e.target.value ? Number(e.target.value) : undefined)}
+            placeholder="Максимальный бюджет"
+          />
+          <Input
+            label="Выполнить до"
+            type="date"
+            value={editDeadline}
+            onChange={(e) => setEditDeadline(e.target.value)}
+          />
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="outline" onClick={() => setShowEditModal(false)}>
+            Отмена
+          </Button>
+          <Button onClick={() => updateMutation.mutate()} loading={updateMutation.isPending}>
+            Сохранить
           </Button>
         </div>
       </Modal>
