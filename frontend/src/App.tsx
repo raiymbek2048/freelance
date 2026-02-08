@@ -26,6 +26,7 @@ import {
   AdminUsersPage,
   AdminVerificationsPage,
   AdminSubscriptionPage,
+  AdminAnalyticsPage,
 } from '@/pages/admin';
 
 const queryClient = new QueryClient({
@@ -189,6 +190,14 @@ function AppContent() {
         element={
           <AdminRoute>
             <AdminSubscriptionPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/analytics"
+        element={
+          <AdminRoute>
+            <AdminAnalyticsPage />
           </AdminRoute>
         }
       />

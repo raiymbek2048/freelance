@@ -82,10 +82,74 @@ export interface AdminVerification {
   rejectionReason?: string;
 }
 
+// Analytics Types
+export interface DailyStats {
+  date: string;
+  newUsers: number;
+  newOrders: number;
+  completedOrders: number;
+  revenue: number;
+}
+
+export interface WeeklyStats {
+  weekStart: string;
+  newUsers: number;
+  newOrders: number;
+  completedOrders: number;
+  revenue: number;
+}
+
+export interface MonthlyStats {
+  year: number;
+  month: number;
+  monthName: string;
+  newUsers: number;
+  newOrders: number;
+  completedOrders: number;
+  revenue: number;
+}
+
+export interface SubscriptionByPeriod {
+  date: string;
+  newSubscriptions: number;
+  revenue: number;
+}
+
+export interface SubscriptionAnalytics {
+  totalSubscriptions: number;
+  activeSubscriptions: number;
+  trialSubscriptions: number;
+  expiredSubscriptions: number;
+  totalRevenue: number;
+  revenueThisMonth: number;
+  revenueLastMonth: number;
+  byPeriod: SubscriptionByPeriod[];
+}
+
+export interface ConversionStats {
+  registrationToExecutorRate: number;
+  executorToVerifiedRate: number;
+  orderCompletionRate: number;
+  responseToSelectionRate: number;
+}
+
+export interface AnalyticsData {
+  dailyStats: DailyStats[];
+  weeklyStats: WeeklyStats[];
+  monthlyStats: MonthlyStats[];
+  subscriptions: SubscriptionAnalytics;
+  conversions: ConversionStats;
+}
+
 export const adminApi = {
   // Stats
   getStats: async (): Promise<AdminStats> => {
     const response = await apiClient.get<AdminStats>('/admin/stats/overview');
+    return response.data;
+  },
+
+  getAnalytics: async (): Promise<AnalyticsData> => {
+    const response = await apiClient.get<AnalyticsData>('/admin/stats/analytics');
     return response.data;
   },
 

@@ -4,6 +4,7 @@ import kg.freelance.dto.request.CategoryCreateRequest;
 import kg.freelance.dto.response.*;
 import kg.freelance.entity.*;
 import kg.freelance.entity.enums.OrderStatus;
+import kg.freelance.entity.enums.SubscriptionStatus;
 import kg.freelance.entity.enums.UserRole;
 import kg.freelance.exception.BadRequestException;
 import kg.freelance.exception.ResourceNotFoundException;
@@ -18,9 +19,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
+import java.time.format.TextStyle;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +37,9 @@ public class AdminServiceImpl implements AdminService {
     private final ReviewRepository reviewRepository;
     private final ExecutorProfileRepository executorProfileRepository;
     private final ReviewService reviewService;
+    private final UserSubscriptionRepository userSubscriptionRepository;
+    private final SubscriptionSettingsRepository subscriptionSettingsRepository;
+    private final OrderResponseRepository orderResponseRepository;
 
     // ==================== USERS ====================
 
@@ -515,5 +522,228 @@ public class AdminServiceImpl implements AdminService {
                 .parentId(category.getParent() != null ? category.getParent().getId() : null)
                 .sortOrder(category.getSortOrder())
                 .build();
+    }
+
+    // ==================== ANALYTICS ====================
+
+    @Override
+    @Transactional(readOnly = true)
+    public AnalyticsResponse getAnalytics() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+
+        List<User> allUsers = userRepository.findAll();
+        List<Order> allOrders = orderRepository.findAll();
+        List<UserSubscription> allSubscriptions = userSubscriptionRepository.findAll();
+        List<OrderResponse> allResponses = orderResponseRepository.findAll();
+
+        BigDecimal subscriptionPrice = subscriptionSettingsRepository.getSettings().getPrice();
+
+        // Daily stats (last 30 days)
+        List<AnalyticsResponse.DailyStats> dailyStats = new ArrayList<>();
+        for (int i = 29; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            LocalDateTime dayStart = date.atStartOfDay();
+            LocalDateTime dayEnd = date.atTime(LocalTime.MAX);
+
+            long newUsers = allUsers.stream()
+                    .filter(u -> u.getCreatedAt() != null && isWithinPeriod(u.getCreatedAt(), dayStart, dayEnd))
+                    .count();
+            long newOrders = allOrders.stream()
+                    .filter(o -> o.getCreatedAt() != null && isWithinPeriod(o.getCreatedAt(), dayStart, dayEnd))
+                    .count();
+            long completedOrders = allOrders.stream()
+                    .filter(o -> o.getCompletedAt() != null && isWithinPeriod(o.getCompletedAt(), dayStart, dayEnd))
+                    .count();
+            long newActiveSubscriptions = allSubscriptions.stream()
+                    .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && isWithinPeriod(s.getCreatedAt(), dayStart, dayEnd))
+                    .count();
+            BigDecimal revenue = subscriptionPrice.multiply(BigDecimal.valueOf(newActiveSubscriptions));
+
+            dailyStats.add(AnalyticsResponse.DailyStats.builder()
+                    .date(date)
+                    .newUsers(newUsers)
+                    .newOrders(newOrders)
+                    .completedOrders(completedOrders)
+                    .revenue(revenue)
+                    .build());
+        }
+
+        // Weekly stats (last 12 weeks)
+        List<AnalyticsResponse.WeeklyStats> weeklyStats = new ArrayList<>();
+        for (int i = 11; i >= 0; i--) {
+            LocalDate weekStart = today.minusWeeks(i).with(java.time.DayOfWeek.MONDAY);
+            LocalDate weekEnd = weekStart.plusDays(6);
+            LocalDateTime weekStartTime = weekStart.atStartOfDay();
+            LocalDateTime weekEndTime = weekEnd.atTime(LocalTime.MAX);
+
+            long newUsers = allUsers.stream()
+                    .filter(u -> u.getCreatedAt() != null && isWithinPeriod(u.getCreatedAt(), weekStartTime, weekEndTime))
+                    .count();
+            long newOrders = allOrders.stream()
+                    .filter(o -> o.getCreatedAt() != null && isWithinPeriod(o.getCreatedAt(), weekStartTime, weekEndTime))
+                    .count();
+            long completedOrders = allOrders.stream()
+                    .filter(o -> o.getCompletedAt() != null && isWithinPeriod(o.getCompletedAt(), weekStartTime, weekEndTime))
+                    .count();
+            long newActiveSubscriptions = allSubscriptions.stream()
+                    .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && isWithinPeriod(s.getCreatedAt(), weekStartTime, weekEndTime))
+                    .count();
+            BigDecimal revenue = subscriptionPrice.multiply(BigDecimal.valueOf(newActiveSubscriptions));
+
+            weeklyStats.add(AnalyticsResponse.WeeklyStats.builder()
+                    .weekStart(weekStart)
+                    .newUsers(newUsers)
+                    .newOrders(newOrders)
+                    .completedOrders(completedOrders)
+                    .revenue(revenue)
+                    .build());
+        }
+
+        // Monthly stats (last 12 months)
+        List<AnalyticsResponse.MonthlyStats> monthlyStats = new ArrayList<>();
+        for (int i = 11; i >= 0; i--) {
+            LocalDate monthStart = today.minusMonths(i).withDayOfMonth(1);
+            LocalDate monthEnd = monthStart.plusMonths(1).minusDays(1);
+            LocalDateTime monthStartTime = monthStart.atStartOfDay();
+            LocalDateTime monthEndTime = monthEnd.atTime(LocalTime.MAX);
+
+            long newUsers = allUsers.stream()
+                    .filter(u -> u.getCreatedAt() != null && isWithinPeriod(u.getCreatedAt(), monthStartTime, monthEndTime))
+                    .count();
+            long newOrders = allOrders.stream()
+                    .filter(o -> o.getCreatedAt() != null && isWithinPeriod(o.getCreatedAt(), monthStartTime, monthEndTime))
+                    .count();
+            long completedOrders = allOrders.stream()
+                    .filter(o -> o.getCompletedAt() != null && isWithinPeriod(o.getCompletedAt(), monthStartTime, monthEndTime))
+                    .count();
+            long newActiveSubscriptions = allSubscriptions.stream()
+                    .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && isWithinPeriod(s.getCreatedAt(), monthStartTime, monthEndTime))
+                    .count();
+            BigDecimal revenue = subscriptionPrice.multiply(BigDecimal.valueOf(newActiveSubscriptions));
+
+            String monthName = monthStart.getMonth().getDisplayName(TextStyle.SHORT, new Locale("ru"));
+
+            monthlyStats.add(AnalyticsResponse.MonthlyStats.builder()
+                    .year(monthStart.getYear())
+                    .month(monthStart.getMonthValue())
+                    .monthName(monthName)
+                    .newUsers(newUsers)
+                    .newOrders(newOrders)
+                    .completedOrders(completedOrders)
+                    .revenue(revenue)
+                    .build());
+        }
+
+        // Subscription analytics
+        long totalSubscriptions = allSubscriptions.size();
+        long activeSubscriptions = allSubscriptions.stream()
+                .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && s.getEndDate().isAfter(now))
+                .count();
+        long trialSubscriptions = allSubscriptions.stream()
+                .filter(s -> s.getStatus() == SubscriptionStatus.TRIAL && s.getEndDate().isAfter(now))
+                .count();
+        long expiredSubscriptions = allSubscriptions.stream()
+                .filter(s -> s.getEndDate().isBefore(now) || s.getStatus() == SubscriptionStatus.EXPIRED)
+                .count();
+
+        long totalPaidSubscriptions = allSubscriptions.stream()
+                .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE)
+                .count();
+        BigDecimal totalRevenue = subscriptionPrice.multiply(BigDecimal.valueOf(totalPaidSubscriptions));
+
+        LocalDateTime thisMonthStart = today.withDayOfMonth(1).atStartOfDay();
+        LocalDateTime lastMonthStart = today.minusMonths(1).withDayOfMonth(1).atStartOfDay();
+        LocalDateTime lastMonthEnd = thisMonthStart.minusSeconds(1);
+
+        long subscriptionsThisMonth = allSubscriptions.stream()
+                .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && s.getCreatedAt().isAfter(thisMonthStart))
+                .count();
+        long subscriptionsLastMonth = allSubscriptions.stream()
+                .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && isWithinPeriod(s.getCreatedAt(), lastMonthStart, lastMonthEnd))
+                .count();
+
+        BigDecimal revenueThisMonth = subscriptionPrice.multiply(BigDecimal.valueOf(subscriptionsThisMonth));
+        BigDecimal revenueLastMonth = subscriptionPrice.multiply(BigDecimal.valueOf(subscriptionsLastMonth));
+
+        // Subscription by period (last 30 days)
+        List<AnalyticsResponse.SubscriptionByPeriod> subscriptionByPeriod = new ArrayList<>();
+        for (int i = 29; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            LocalDateTime dayStart = date.atStartOfDay();
+            LocalDateTime dayEnd = date.atTime(LocalTime.MAX);
+
+            long newSubs = allSubscriptions.stream()
+                    .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && isWithinPeriod(s.getCreatedAt(), dayStart, dayEnd))
+                    .count();
+
+            subscriptionByPeriod.add(AnalyticsResponse.SubscriptionByPeriod.builder()
+                    .date(date)
+                    .newSubscriptions(newSubs)
+                    .revenue(subscriptionPrice.multiply(BigDecimal.valueOf(newSubs)))
+                    .build());
+        }
+
+        AnalyticsResponse.SubscriptionAnalytics subscriptionAnalytics = AnalyticsResponse.SubscriptionAnalytics.builder()
+                .totalSubscriptions(totalSubscriptions)
+                .activeSubscriptions(activeSubscriptions)
+                .trialSubscriptions(trialSubscriptions)
+                .expiredSubscriptions(expiredSubscriptions)
+                .totalRevenue(totalRevenue)
+                .revenueThisMonth(revenueThisMonth)
+                .revenueLastMonth(revenueLastMonth)
+                .byPeriod(subscriptionByPeriod)
+                .build();
+
+        // Conversion stats
+        long totalUsersCount = allUsers.size();
+        long executorsCount = executorProfileRepository.count();
+        long verifiedExecutors = allUsers.stream()
+                .filter(u -> Boolean.TRUE.equals(u.getExecutorVerified()))
+                .count();
+        long totalOrdersCount = allOrders.size();
+        long completedOrdersCount = allOrders.stream()
+                .filter(o -> o.getStatus() == OrderStatus.COMPLETED)
+                .count();
+        long totalResponsesCount = allResponses.size();
+        long selectedResponsesCount = allResponses.stream()
+                .filter(r -> Boolean.TRUE.equals(r.getIsSelected()))
+                .count();
+
+        Double registrationToExecutorRate = totalUsersCount > 0
+                ? (executorsCount * 100.0 / totalUsersCount)
+                : 0.0;
+        Double executorToVerifiedRate = executorsCount > 0
+                ? (verifiedExecutors * 100.0 / executorsCount)
+                : 0.0;
+        Double orderCompletionRate = totalOrdersCount > 0
+                ? (completedOrdersCount * 100.0 / totalOrdersCount)
+                : 0.0;
+        Double responseToSelectionRate = totalResponsesCount > 0
+                ? (selectedResponsesCount * 100.0 / totalResponsesCount)
+                : 0.0;
+
+        AnalyticsResponse.ConversionStats conversionStats = AnalyticsResponse.ConversionStats.builder()
+                .registrationToExecutorRate(round(registrationToExecutorRate))
+                .executorToVerifiedRate(round(executorToVerifiedRate))
+                .orderCompletionRate(round(orderCompletionRate))
+                .responseToSelectionRate(round(responseToSelectionRate))
+                .build();
+
+        return AnalyticsResponse.builder()
+                .dailyStats(dailyStats)
+                .weeklyStats(weeklyStats)
+                .monthlyStats(monthlyStats)
+                .subscriptions(subscriptionAnalytics)
+                .conversions(conversionStats)
+                .build();
+    }
+
+    private boolean isWithinPeriod(LocalDateTime dateTime, LocalDateTime start, LocalDateTime end) {
+        return !dateTime.isBefore(start) && !dateTime.isAfter(end);
+    }
+
+    private Double round(Double value) {
+        return BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP).doubleValue();
     }
 }

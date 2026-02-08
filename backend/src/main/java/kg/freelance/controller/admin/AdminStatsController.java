@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kg.freelance.dto.response.AdminStatsResponse;
+import kg.freelance.dto.response.AnalyticsResponse;
 import kg.freelance.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,13 @@ public class AdminStatsController {
     @Operation(summary = "Get overview stats", description = "Get platform overview statistics")
     public ResponseEntity<AdminStatsResponse> getOverviewStats() {
         AdminStatsResponse response = adminService.getOverviewStats();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/analytics")
+    @Operation(summary = "Get detailed analytics", description = "Get detailed platform analytics with time-series data")
+    public ResponseEntity<AnalyticsResponse> getAnalytics() {
+        AnalyticsResponse response = adminService.getAnalytics();
         return ResponseEntity.ok(response);
     }
 }

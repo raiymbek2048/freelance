@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   Menu,
   Bell,
+  BarChart3,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/authStore';
@@ -25,6 +26,7 @@ interface AdminLayoutProps {
 
 const navItems = [
   { path: '/admin', icon: LayoutDashboard, label: 'Дашборд', exact: true },
+  { path: '/admin/analytics', icon: BarChart3, label: 'Аналитика' },
   { path: '/admin/disputes', icon: AlertTriangle, label: 'Споры' },
   { path: '/admin/orders', icon: Briefcase, label: 'Заказы' },
   { path: '/admin/users', icon: Users, label: 'Пользователи' },

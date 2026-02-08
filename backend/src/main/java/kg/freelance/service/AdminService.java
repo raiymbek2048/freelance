@@ -2,6 +2,7 @@ package kg.freelance.service;
 
 import kg.freelance.dto.request.CategoryCreateRequest;
 import kg.freelance.dto.response.*;
+import kg.freelance.dto.response.AnalyticsResponse;
 import kg.freelance.entity.enums.OrderStatus;
 import kg.freelance.entity.enums.UserRole;
 import org.springframework.data.domain.Pageable;
@@ -50,4 +51,7 @@ public interface AdminService {
 
     // Stats
     AdminStatsResponse getOverviewStats();
+
+    // Analytics
+    AnalyticsResponse getAnalytics();
 }
