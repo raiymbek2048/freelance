@@ -65,6 +65,14 @@ export function ExecutorDetailPage() {
     );
   }
 
+  const reputationColorMap: Record<string, string> = {
+    gray: 'bg-gray-100 text-gray-700',
+    blue: 'bg-blue-100 text-blue-700',
+    green: 'bg-green-100 text-green-700',
+    purple: 'bg-purple-100 text-purple-700',
+    amber: 'bg-amber-100 text-amber-700',
+  };
+
   const isOwnProfile = user?.id === executor.id;
 
   return (
@@ -91,7 +99,14 @@ export function ExecutorDetailPage() {
             <div className="flex-1">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{executor.fullName}</h1>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-gray-900">{executor.fullName}</h1>
+                    {executor.reputationLevel && (
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${reputationColorMap[executor.reputationColor || 'gray'] || reputationColorMap.gray}`}>
+                        {executor.reputationLevel}
+                      </span>
+                    )}
+                  </div>
                   {executor.specialization && (
                     <p className="text-gray-600">{executor.specialization}</p>
                   )}

@@ -25,4 +25,5 @@ public class UserResponse {
     private UserRole role;
     private LocalDateTime createdAt;
     private Boolean hasExecutorProfile;
+    private String bio;
 }

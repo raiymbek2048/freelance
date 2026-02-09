@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { User, Shield, Eye, EyeOff, Save, Mail, Phone, CheckCircle, Send } from 'lucide-react';
 import { Layout } from '@/components/layout';
-import { Button, Card, Input, Toggle } from '@/components/ui';
+import { Button, Card, Input, Textarea, Toggle } from '@/components/ui';
 import { useAuthStore } from '@/stores/authStore';
 import { usersApi } from '@/api/users';
 import type { UpdateProfileRequest } from '@/api/users';
@@ -15,6 +15,7 @@ export function ProfilePage() {
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [whatsappLink, setWhatsappLink] = useState(user?.whatsappLink || '');
+  const [bio, setBio] = useState(user?.bio || '');
   const [hideFromExecutorList, setHideFromExecutorList] = useState(user?.hideFromExecutorList || false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -91,6 +92,7 @@ export function ProfilePage() {
       phone: phone.trim() || undefined,
       whatsappLink: whatsappLink.trim() || undefined,
       hideFromExecutorList,
+      bio: bio.trim() || undefined,
     });
   };
 
@@ -98,6 +100,7 @@ export function ProfilePage() {
     fullName !== user?.fullName ||
     phone !== (user?.phone || '') ||
     whatsappLink !== (user?.whatsappLink || '') ||
+    bio !== (user?.bio || '') ||
     hideFromExecutorList !== user?.hideFromExecutorList;
 
   return (
@@ -137,6 +140,19 @@ export function ProfilePage() {
 
               <div className="text-sm text-gray-500">
                 Email: <span className="font-medium text-gray-700">{user?.email}</span>
+              </div>
+
+              <div>
+                <Textarea
+                  label="О себе"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Расскажите, какие задачи вы выполняете и в чём ваша специализация..."
+                  rows={3}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Необязательно. Это описание будет видно на вашем профиле исполнителя.
+                </p>
               </div>
             </div>
           </Card>

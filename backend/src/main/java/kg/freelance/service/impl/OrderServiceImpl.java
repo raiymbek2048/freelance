@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -289,6 +290,16 @@ public class OrderServiceImpl implements OrderService {
             ExecutorProfile profile = executorProfileRepository.findById(order.getExecutor().getId()).orElse(null);
             if (profile != null) {
                 profile.setCompletedOrders(profile.getCompletedOrders() + 1);
+
+                // Update average completion days
+                if (order.getStartedAt() != null) {
+                    long days = Math.max(1, ChronoUnit.DAYS.between(order.getStartedAt(), order.getCompletedAt()));
+                    int completed = profile.getCompletedOrders();
+                    double oldAvg = profile.getAvgCompletionDays() != null ? profile.getAvgCompletionDays() : 0.0;
+                    double newAvg = ((oldAvg * (completed - 1)) + days) / completed;
+                    profile.setAvgCompletionDays(newAvg);
+                }
+
                 executorProfileRepository.save(profile);
             }
 

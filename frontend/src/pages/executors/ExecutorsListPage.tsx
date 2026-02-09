@@ -1,33 +1,24 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { Button, Card, Input, Select, Avatar, Rating, Badge } from '@/components/ui';
 import { executorsApi } from '@/api/executors';
-import { categoriesApi } from '@/api/categories';
 import type { ExecutorFilters } from '@/types';
 
 export function ExecutorsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(0);
-  const [showFilters, setShowFilters] = useState(false);
 
   const filters: ExecutorFilters = {
-    categoryId: searchParams.get('categoryId') ? Number(searchParams.get('categoryId')) : undefined,
     minRating: searchParams.get('minRating') ? Number(searchParams.get('minRating')) : undefined,
-    availableOnly: searchParams.get('availableOnly') === 'true',
     search: searchParams.get('search') || undefined,
   };
 
   const { data: executorsData, isLoading } = useQuery({
     queryKey: ['executors', filters, page],
     queryFn: () => executorsApi.getAll(filters, page, 20),
-  });
-
-  const { data: categories } = useQuery({
-    queryKey: ['categories'],
-    queryFn: categoriesApi.getAll,
   });
 
   const updateFilter = (key: keyof ExecutorFilters, value: string | number | boolean | undefined) => {
@@ -41,77 +32,52 @@ export function ExecutorsListPage() {
     setPage(0);
   };
 
-  const categoryOptions = [
-    { value: '', label: 'Все категории' },
-    ...(categories?.map((c) => ({ value: c.id, label: c.name })) || []),
-  ];
-
   const ratingOptions = [
     { value: '', label: 'Любой рейтинг' },
+    { value: '1', label: 'От 1 звезды' },
+    { value: '2', label: 'От 2 звёзд' },
+    { value: '3', label: 'От 3 звёзд' },
     { value: '4', label: 'От 4 звёзд' },
-    { value: '4.5', label: 'От 4.5 звёзд' },
+    { value: '5', label: '5 звёзд' },
   ];
+
+  const reputationColorMap: Record<string, string> = {
+    gray: 'bg-gray-100 text-gray-700',
+    blue: 'bg-blue-100 text-blue-700',
+    green: 'bg-green-100 text-green-700',
+    purple: 'bg-purple-100 text-purple-700',
+    amber: 'bg-amber-100 text-amber-700',
+  };
 
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Исполнители</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-white">Исполнители</h1>
+          <p className="text-white/80 mt-1">
             {executorsData?.totalElements || 0} специалистов
           </p>
         </div>
 
         {/* Search & Filters */}
         <Card padding="md" className="mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <div className="flex gap-4 items-center">
+            <div className="flex-1">
               <Input
-                placeholder="Поиск исполнителей..."
-                className="pl-10"
+                placeholder="Поиск по имени или специализации..."
                 value={filters.search || ''}
                 onChange={(e) => updateFilter('search', e.target.value || undefined)}
               />
             </div>
-            <Select
-              options={categoryOptions}
-              value={filters.categoryId || ''}
-              onChange={(e) => updateFilter('categoryId', e.target.value || undefined)}
-              className="w-full md:w-48"
-            />
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2"
-            >
-              <Filter className="w-4 h-4" />
-              Фильтры
-            </Button>
-          </div>
-
-          {showFilters && (
-            <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="w-48 flex-shrink-0">
               <Select
-                label="Минимальный рейтинг"
                 options={ratingOptions}
                 value={filters.minRating || ''}
                 onChange={(e) => updateFilter('minRating', e.target.value || undefined)}
               />
-              <div className="flex items-end">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={filters.availableOnly}
-                    onChange={(e) => updateFilter('availableOnly', e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                  />
-                  <span className="text-sm text-gray-700">Только доступные для работы</span>
-                </label>
-              </div>
             </div>
-          )}
+          </div>
         </Card>
 
         {/* Executors Grid */}
@@ -169,26 +135,13 @@ export function ExecutorsListPage() {
                     <p className="text-sm text-gray-600 line-clamp-2 mb-4">{executor.bio}</p>
                   )}
 
-                  {executor.categories && executor.categories.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {executor.categories.slice(0, 3).map((category) => (
-                        <span
-                          key={category.id}
-                          className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
-                        >
-                          {category.name}
-                        </span>
-                      ))}
-                      {executor.categories.length > 3 && (
-                        <span className="text-xs text-gray-500">
-                          +{executor.categories.length - 3}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
                   <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-100">
                     <span>{executor.completedOrders} выполнено</span>
+                    {executor.reputationLevel && (
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${reputationColorMap[executor.reputationColor || 'gray'] || reputationColorMap.gray}`}>
+                        {executor.reputationLevel}
+                      </span>
+                    )}
                   </div>
                 </Card>
               </Link>

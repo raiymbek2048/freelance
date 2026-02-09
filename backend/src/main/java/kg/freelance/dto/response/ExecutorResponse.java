@@ -26,4 +26,6 @@ public class ExecutorResponse {
     private LocalDateTime lastActiveAt;
     private LocalDateTime memberSince;
     private List<CategoryResponse> categories;
+    private String reputationLevel;
+    private String reputationColor;
 }

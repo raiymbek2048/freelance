@@ -12,6 +12,7 @@ import kg.freelance.repository.ExecutorProfileRepository;
 import kg.freelance.repository.PortfolioRepository;
 import kg.freelance.repository.ReviewRepository;
 import kg.freelance.repository.UserRepository;
+import kg.freelance.entity.enums.ReputationLevel;
 import kg.freelance.service.ExecutorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -186,6 +187,8 @@ public class ExecutorServiceImpl implements ExecutorService {
                         .build())
                 .toList();
 
+        ReputationLevel reputation = ReputationLevel.calculate(profile.getCompletedOrders(), profile.getRating());
+
         return ExecutorListResponse.builder()
                 .id(profile.getId())
                 .fullName(user.getFullName())
@@ -197,6 +200,8 @@ public class ExecutorServiceImpl implements ExecutorService {
                 .reviewCount(profile.getReviewCount())
                 .availableForWork(profile.getAvailableForWork())
                 .categories(categories)
+                .reputationLevel(reputation.getLabel())
+                .reputationColor(reputation.getColor())
                 .build();
     }
 
@@ -209,6 +214,8 @@ public class ExecutorServiceImpl implements ExecutorService {
                         .slug(cat.getSlug())
                         .build())
                 .collect(Collectors.toList());
+
+        ReputationLevel reputation = ReputationLevel.calculate(profile.getCompletedOrders(), profile.getRating());
 
         return ExecutorResponse.builder()
                 .id(profile.getId())
@@ -226,6 +233,8 @@ public class ExecutorServiceImpl implements ExecutorService {
                 .lastActiveAt(profile.getLastActiveAt())
                 .memberSince(user.getCreatedAt())
                 .categories(categories)
+                .reputationLevel(reputation.getLabel())
+                .reputationColor(reputation.getColor())
                 .build();
     }
 

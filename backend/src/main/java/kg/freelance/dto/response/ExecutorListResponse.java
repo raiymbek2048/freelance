@@ -20,4 +20,6 @@ public class ExecutorListResponse {
     private Integer reviewCount;
     private Boolean availableForWork;
     private List<CategoryResponse> categories;
+    private String reputationLevel;
+    private String reputationColor;
 }

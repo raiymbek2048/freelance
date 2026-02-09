@@ -14,6 +14,7 @@ export interface User {
   role: UserRole;
   active: boolean;
   createdAt: string;
+  bio?: string;
 }
 
 export type ProfileVisibility = 'PUBLIC' | 'PRIVATE';
@@ -52,6 +53,8 @@ export interface ExecutorListItem {
   reviewCount: number;
   availableForWork: boolean;
   categories: Category[];
+  reputationLevel?: string;
+  reputationColor?: string;
 }
 
 export interface ExecutorProfile {
@@ -70,6 +73,8 @@ export interface ExecutorProfile {
   lastActiveAt?: string;
   memberSince?: string;
   categories: Category[];
+  reputationLevel?: string;
+  reputationColor?: string;
 }
 
 export interface ExecutorProfileRequest {

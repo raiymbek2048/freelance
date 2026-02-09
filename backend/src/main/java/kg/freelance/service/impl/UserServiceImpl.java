@@ -2,9 +2,11 @@ package kg.freelance.service.impl;
 
 import kg.freelance.dto.request.UserUpdateRequest;
 import kg.freelance.dto.response.UserResponse;
+import kg.freelance.entity.ExecutorProfile;
 import kg.freelance.entity.User;
 import kg.freelance.exception.BadRequestException;
 import kg.freelance.exception.ResourceNotFoundException;
+import kg.freelance.repository.ExecutorProfileRepository;
 import kg.freelance.repository.UserRepository;
 import kg.freelance.security.UserPrincipal;
 import kg.freelance.service.UserService;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final ExecutorProfileRepository executorProfileRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -82,6 +85,16 @@ public class UserServiceImpl implements UserService {
         }
 
         user = userRepository.save(user);
+
+        // Update executor profile bio if provided
+        if (request.getBio() != null) {
+            ExecutorProfile profile = executorProfileRepository.findById(userId).orElse(null);
+            if (profile != null) {
+                profile.setBio(request.getBio());
+                executorProfileRepository.save(profile);
+            }
+        }
+
         return mapToResponse(user);
     }
 
@@ -109,6 +122,11 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserResponse mapToResponse(User user) {
+        String bio = null;
+        if (user.getExecutorProfile() != null) {
+            bio = user.getExecutorProfile().getBio();
+        }
+
         return UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -124,6 +142,7 @@ public class UserServiceImpl implements UserService {
                 .role(user.getRole())
                 .createdAt(user.getCreatedAt())
                 .hasExecutorProfile(user.getExecutorProfile() != null)
+                .bio(bio)
                 .build();
     }
 }

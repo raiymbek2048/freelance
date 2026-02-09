@@ -8,6 +8,7 @@ export interface UpdateProfileRequest {
   whatsappLink?: string;
   profileVisibility?: ProfileVisibility;
   hideFromExecutorList?: boolean;
+  bio?: string;
 }
 
 export interface ChangePasswordRequest {

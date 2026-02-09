@@ -22,4 +22,7 @@ public class UserUpdateRequest {
     private ProfileVisibility profileVisibility;
 
     private Boolean hideFromExecutorList;
+
+    @Size(max = 2000, message = "Bio must not exceed 2000 characters")
+    private String bio;
 }
