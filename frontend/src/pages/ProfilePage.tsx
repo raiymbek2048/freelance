@@ -293,6 +293,15 @@ export function ProfilePage() {
                 description="Когда включено, ваш профиль будет виден в разделе «Исполнители» и заказчики смогут найти вас"
               />
 
+              {!user?.executorVerified && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="text-sm text-amber-800">
+                    Ваш профиль появится в списке исполнителей только после прохождения <strong>верификации</strong>.{' '}
+                    <Link to="/verification" className="underline font-medium">Пройти верификацию</Link>
+                  </p>
+                </div>
+              )}
+
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">

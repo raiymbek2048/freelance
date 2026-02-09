@@ -18,6 +18,7 @@ public interface ExecutorProfileRepository extends JpaRepository<ExecutorProfile
             SELECT e FROM ExecutorProfile e
             JOIN e.user u
             WHERE u.active = true
+            AND u.executorVerified = true
             AND u.hideFromExecutorList = false
             AND (:categoryId IS NULL OR :categoryId IN (SELECT c.id FROM e.categories c))
             AND (:minRating IS NULL OR e.rating >= :minRating)
@@ -37,6 +38,7 @@ public interface ExecutorProfileRepository extends JpaRepository<ExecutorProfile
             JOIN e.categories c
             WHERE c.id = :categoryId
             AND e.user.active = true
+            AND e.user.executorVerified = true
             AND e.user.hideFromExecutorList = false
             ORDER BY e.rating DESC
             """)
