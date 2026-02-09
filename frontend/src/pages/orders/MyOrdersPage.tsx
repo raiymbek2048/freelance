@@ -19,6 +19,7 @@ import {
   Hammer,
 } from 'lucide-react';
 import { Layout } from '@/components/layout';
+import { PageMeta } from '@/components/PageMeta';
 import { Button, Avatar, Badge } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
 import { chatApi } from '@/api/chat';
@@ -325,6 +326,7 @@ export function MyOrdersPage() {
 
   return (
     <Layout>
+      <PageMeta title="Мои задания" description="Управляйте своими заданиями и откликами на FreelanceKG." />
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

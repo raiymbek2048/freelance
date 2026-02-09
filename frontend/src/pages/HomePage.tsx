@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, User, Clock, Menu, X, Shield, AlertTriangle, MessageSquare } from 'lucide-react';
 import { Footer } from '@/components/layout';
+import { PageMeta } from '@/components/PageMeta';
 import { AnnouncementBanner } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
 import { useAuthStore } from '@/stores/authStore';
@@ -155,6 +156,7 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen relative">
+      <PageMeta title="Главная" description="FreelanceKG — биржа фриланса для Кыргызстана. Находите исполнителей для любых задач или предлагайте свои услуги." />
       {/* Blurred background layer */}
       <div
         className="fixed inset-0 -z-10"

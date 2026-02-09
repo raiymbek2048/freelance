@@ -15,7 +15,7 @@ ENV VITE_WS_URL=$VITE_WS_URL
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Copy source files
 COPY . .

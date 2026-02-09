@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { MapPin, ChevronDown } from 'lucide-react';
 import { Layout } from '@/components/layout';
+import { PageMeta } from '@/components/PageMeta';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
 
@@ -73,6 +74,7 @@ export function CreateOrderPage() {
 
   return (
     <Layout>
+      <PageMeta title="Создание задания" description="Разместите задание на FreelanceKG и найдите исполнителя." />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Создание задания</h1>
 

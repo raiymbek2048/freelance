@@ -206,7 +206,7 @@ export function Header() {
             onClick={() => setMobileMenuOpen(false)}
           />
           {/* Sidebar */}
-          <div className="md:hidden fixed top-0 right-0 h-full w-72 bg-white shadow-xl z-50 overflow-y-auto">
+          <div className="md:hidden fixed top-0 right-0 h-full w-4/5 max-w-72 bg-white shadow-xl z-50 overflow-y-auto">
             {/* Close button */}
             <button
               className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700"

@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, MapPin, ChevronDown, ChevronUp, User, Clock, ChevronLeft, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/layout';
+import { PageMeta } from '@/components/PageMeta';
 import { Card } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
 import { useAuthStore } from '@/stores/authStore';
@@ -110,6 +111,7 @@ export function OrdersListPage() {
 
   return (
     <div className="min-h-screen relative">
+      <PageMeta title="Задания" description="Все задания на FreelanceKG. Найдите подходящий заказ и предложите свои услуги." />
       {/* Blurred background layer */}
       <div
         className="fixed inset-0 -z-10"

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
+import { PageMeta } from '@/components/PageMeta';
 import { Button, Input, Card } from '@/components/ui';
 import { oauthApi } from '@/api/oauth';
 
@@ -60,6 +61,7 @@ export function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 relative">
+      <PageMeta title="Регистрация" description="Создайте аккаунт на FreelanceKG — бирже фриланса для Кыргызстана." />
       {/* Blurred background layer */}
       <div
         className="fixed inset-0 -z-10"

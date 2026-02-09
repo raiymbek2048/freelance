@@ -1,10 +1,12 @@
 import { Layout } from '@/components/layout';
+import { PageMeta } from '@/components/PageMeta';
 import { Card } from '@/components/ui';
 
 export function PrivacyPage() {
   return (
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-8">
+        <PageMeta title="Политика конфиденциальности" description="Политика конфиденциальности FreelanceKG. Как мы собираем и используем ваши данные." />
         <h1 className="text-3xl font-bold text-white mb-8">Политика конфиденциальности</h1>
 
         <Card padding="lg">

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Users } from 'lucide-react';
 import { Layout } from '@/components/layout';
+import { PageMeta } from '@/components/PageMeta';
 import { Button, Card, Input, Select, Avatar, Rating, Badge } from '@/components/ui';
 import { executorsApi } from '@/api/executors';
 import type { ExecutorFilters } from '@/types';
@@ -51,6 +52,7 @@ export function ExecutorsListPage() {
 
   return (
     <Layout>
+      <PageMeta title="Исполнители" description="Каталог верифицированных исполнителей на FreelanceKG. Найдите специалиста для вашей задачи." />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -62,7 +64,7 @@ export function ExecutorsListPage() {
 
         {/* Search & Filters */}
         <Card padding="md" className="mb-6">
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
             <div className="flex-1">
               <Input
                 placeholder="Поиск по имени или специализации..."
@@ -70,7 +72,7 @@ export function ExecutorsListPage() {
                 onChange={(e) => updateFilter('search', e.target.value || undefined)}
               />
             </div>
-            <div className="w-48 flex-shrink-0">
+            <div className="w-full sm:w-48 flex-shrink-0">
               <Select
                 options={ratingOptions}
                 value={filters.minRating || ''}
@@ -104,7 +106,7 @@ export function ExecutorsListPage() {
             <p className="text-gray-500">Попробуйте изменить параметры поиска</p>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {executorsData?.content.map((executor) => (
               <Link key={executor.id} to={`/executors/${executor.id}`}>
                 <Card hover padding="md">

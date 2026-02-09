@@ -1,4 +1,5 @@
 import { Layout } from '@/components/layout';
+import { PageMeta } from '@/components/PageMeta';
 import { Card } from '@/components/ui';
 import { HelpCircle, MessageCircle, Mail, Send } from 'lucide-react';
 
@@ -6,6 +7,7 @@ export function HelpPage() {
   return (
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-8">
+        <PageMeta title="Помощь" description="Часто задаваемые вопросы и контакты поддержки FreelanceKG." />
         <h1 className="text-3xl font-bold text-white mb-8">Помощь</h1>
 
         <div className="space-y-6">

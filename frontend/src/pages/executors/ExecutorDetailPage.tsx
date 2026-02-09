@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Star, Clock, CheckCircle, MessageSquare, ExternalLink } from 'lucide-react';
 import { Layout } from '@/components/layout';
+import { PageMeta } from '@/components/PageMeta';
 import { Button, Card, Avatar, Rating, Badge } from '@/components/ui';
 import { executorsApi } from '@/api/executors';
 import { useAuthStore } from '@/stores/authStore';
@@ -77,6 +78,7 @@ export function ExecutorDetailPage() {
 
   return (
     <Layout>
+      <PageMeta title={executor.fullName} description={`Профиль исполнителя ${executor.fullName} на FreelanceKG. ${executor.specialization || ''}`} />
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Back link */}
         <Link

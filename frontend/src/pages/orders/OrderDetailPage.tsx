@@ -11,6 +11,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Layout } from '@/components/layout';
+import { PageMeta } from '@/components/PageMeta';
 import { Button, Card, Badge, Avatar, Textarea, Input, Modal, Rating } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
 import { disputesApi } from '@/api/disputes';
@@ -224,6 +225,7 @@ export function OrderDetailPage() {
 
   return (
     <Layout>
+      <PageMeta title={order.title} description={`Задание: ${order.title}. ${order.categoryName} на FreelanceKG.`} />
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
