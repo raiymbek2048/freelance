@@ -28,6 +28,9 @@ public interface SubscriptionService {
     UserSubscriptionResponse grantSubscription(Long userId, GrantSubscriptionRequest request, Long adminId);
     void revokeSubscription(Long userId);
 
+    // Payment
+    void activatePaidSubscription(Long userId, int days, String paymentReference);
+
     // Public
     AnnouncementResponse getAnnouncement();
 }

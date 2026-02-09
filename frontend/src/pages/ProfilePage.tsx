@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { User, Shield, Eye, EyeOff, Save, Mail, Phone, CheckCircle, Send } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { User, Shield, Eye, EyeOff, Save, Mail, Phone, CheckCircle, Send, CreditCard, Loader2 } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { PageMeta } from '@/components/PageMeta';
 import { Button, Card, Input, Textarea, Toggle } from '@/components/ui';
@@ -9,6 +9,8 @@ import { usersApi } from '@/api/users';
 import type { UpdateProfileRequest } from '@/api/users';
 import { Navigate, Link } from 'react-router-dom';
 import { contactVerificationApi, type ContactVerificationType } from '@/api/contactVerification';
+import { subscriptionApi } from '@/api/subscription';
+import { paymentApi } from '@/api/payment';
 
 export function ProfilePage() {
   const { user, isAuthenticated, fetchUser } = useAuthStore();
@@ -27,6 +29,33 @@ export function ProfilePage() {
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [verificationSuccess, setVerificationSuccess] = useState<string | null>(null);
+
+  const { data: subscription, refetch: refetchSubscription } = useQuery({
+    queryKey: ['mySubscription'],
+    queryFn: subscriptionApi.getMySubscription,
+    enabled: isAuthenticated,
+  });
+
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
+  const handlePaySubscription = async () => {
+    try {
+      setPaymentLoading(true);
+      const result = await paymentApi.createSubscriptionPayment(30);
+      window.location.href = result.redirectUrl;
+    } catch (err: unknown) {
+      setPaymentLoading(false);
+      const errorMessage = err instanceof Error ? err.message : 'Ошибка создания платежа';
+      alert(errorMessage);
+    }
+  };
+
+  const trialMutation = useMutation({
+    mutationFn: () => subscriptionApi.startTrial(),
+    onSuccess: () => {
+      refetchSubscription();
+    },
+  });
 
   const updateMutation = useMutation({
     mutationFn: (data: UpdateProfileRequest) => usersApi.updateProfile(data),
@@ -341,6 +370,89 @@ export function ProfilePage() {
                 Перейти к верификации
               </Button>
             </Link>
+          </Card>
+
+          {/* Subscription */}
+          <Card padding="lg">
+            <div className="flex items-center gap-3 mb-4">
+              <CreditCard className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-semibold">Подписка</h2>
+            </div>
+
+            {!subscription?.subscriptionRequired ? (
+              <p className="text-sm text-gray-600">
+                Подписка пока не требуется. Вы можете свободно откликаться на заказы.
+              </p>
+            ) : subscription?.hasActiveSubscription ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-green-600">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="font-medium">
+                    Подписка активна
+                    {subscription.status === 'TRIAL' && ' (пробный период)'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Осталось {subscription.daysRemaining}{' '}
+                  {subscription.daysRemaining === 1
+                    ? 'день'
+                    : subscription.daysRemaining && subscription.daysRemaining < 5
+                    ? 'дня'
+                    : 'дней'}
+                  {subscription.endDate && (
+                    <> (до {new Date(subscription.endDate).toLocaleDateString('ru-RU')})</>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Подписка открывает полный доступ к описаниям заказов и возможность откликаться на них.
+                </p>
+
+                <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-gray-900">30 дней подписки</span>
+                    <span className="text-xl font-bold text-cyan-600">{subscription?.price || 500} сом</span>
+                  </div>
+                  <Button
+                    onClick={handlePaySubscription}
+                    disabled={paymentLoading}
+                    className="w-full"
+                  >
+                    {paymentLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Перенаправление...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Оплатить подписку
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {subscription?.canStartTrial && (
+                  <div className="text-center">
+                    <button
+                      onClick={() => trialMutation.mutate()}
+                      disabled={trialMutation.isPending}
+                      className="text-sm text-cyan-600 hover:text-cyan-700 underline"
+                    >
+                      {trialMutation.isPending
+                        ? 'Активация...'
+                        : `Попробовать бесплатно (${subscription.trialDays} дней)`}
+                    </button>
+                  </div>
+                )}
+
+                {trialMutation.isError && (
+                  <p className="text-sm text-red-600">Ошибка активации пробного периода</p>
+                )}
+              </div>
+            )}
           </Card>
 
           {/* Save Button */}

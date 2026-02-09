@@ -87,6 +87,12 @@ app:
     from: ${MAIL_FROM:noreply@freelance.kg}
     enabled: ${MAIL_ENABLED:false}
 
+freedompay:
+  merchant-id: ${FREEDOMPAY_MERCHANT_ID:}
+  secret-key: ${FREEDOMPAY_SECRET_KEY:}
+  api-url: ${FREEDOMPAY_API_URL:https://api.freedompay.kg}
+  test-mode: ${FREEDOMPAY_TEST_MODE:true}
+
 aws:
   s3:
     bucket: ${AWS_S3_BUCKET:freelance-kg-uploads}

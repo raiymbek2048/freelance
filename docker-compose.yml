@@ -49,6 +49,10 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       MAIL_FROM: ${MAIL_FROM:-noreply@freelance.kg}
       MAIL_ENABLED: ${MAIL_ENABLED:-true}
+      FREEDOMPAY_MERCHANT_ID: ${FREEDOMPAY_MERCHANT_ID:-}
+      FREEDOMPAY_SECRET_KEY: ${FREEDOMPAY_SECRET_KEY:-}
+      FREEDOMPAY_API_URL: ${FREEDOMPAY_API_URL:-https://api.freedompay.kg}
+      FREEDOMPAY_TEST_MODE: ${FREEDOMPAY_TEST_MODE:-true}
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
     volumes:

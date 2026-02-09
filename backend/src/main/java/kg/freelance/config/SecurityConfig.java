@@ -66,6 +66,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/executors/{id}/portfolio").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/subscription/announcement").permitAll()
 
+                        // Payment callback from FreedomPay (server-to-server)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/payment/result").permitAll()
+
                         // Verification status (needs auth but listed here for clarity)
                         .requestMatchers(HttpMethod.GET, "/api/v1/verification/status").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/verification/submit").authenticated()

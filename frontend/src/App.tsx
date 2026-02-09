@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import { useAuthStore } from '@/stores/authStore';
 
 // Pages
@@ -23,6 +24,8 @@ import { HelpPage } from '@/pages/HelpPage';
 import { TermsPage } from '@/pages/TermsPage';
 import { PrivacyPage } from '@/pages/PrivacyPage';
 import { DisputeDetailPage } from '@/pages/orders/DisputeDetailPage';
+import { PaymentSuccessPage } from '@/pages/payment/PaymentSuccessPage';
+import { PaymentFailurePage } from '@/pages/payment/PaymentFailurePage';
 import {
   AdminDashboardPage,
   AdminDisputesPage,
@@ -94,6 +97,11 @@ function AppContent() {
   }, []);
 
   return (
+    <>
+    <Helmet
+      defaultTitle="FreelanceKG — биржа фриланса для Кыргызстана"
+      titleTemplate="%s | FreelanceKG"
+    />
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<HomePage />} />
@@ -109,6 +117,8 @@ function AppContent() {
       <Route path="/help" element={<HelpPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/payment/success" element={<PaymentSuccessPage />} />
+      <Route path="/payment/failure" element={<PaymentFailurePage />} />
 
       {/* Protected routes */}
       <Route
@@ -229,6 +239,7 @@ function AppContent() {
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 

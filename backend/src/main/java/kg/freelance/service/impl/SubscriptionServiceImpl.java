@@ -231,6 +231,33 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    @Transactional
+    public void activatePaidSubscription(Long userId, int days, String paymentReference) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        // Expire any existing active subscriptions
+        var existing = subscriptionRepository.findActiveSubscription(user, LocalDateTime.now());
+        existing.ifPresent(sub -> {
+            sub.setStatus(SubscriptionStatus.EXPIRED);
+            subscriptionRepository.save(sub);
+        });
+
+        // Create new paid subscription
+        LocalDateTime now = LocalDateTime.now();
+        UserSubscription subscription = UserSubscription.builder()
+                .user(user)
+                .status(SubscriptionStatus.ACTIVE)
+                .startDate(now)
+                .endDate(now.plusDays(days))
+                .paymentReference(paymentReference)
+                .build();
+
+        subscriptionRepository.save(subscription);
+        log.info("Paid subscription activated for user {} ({} days, payment: {})", userId, days, paymentReference);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public AnnouncementResponse getAnnouncement() {
         SubscriptionSettings settings = settingsRepository.getSettings();

@@ -463,6 +463,12 @@ export interface ResolveDisputeRequest {
   adminNotes?: string;
 }
 
+// Payment types
+export interface PaymentInitResponse {
+  redirectUrl: string;
+  paymentId: number;
+}
+
 // Notification types
 export type NotificationType =
   | 'EXECUTOR_SELECTED'
@@ -470,7 +476,8 @@ export type NotificationType =
   | 'REVISION_REQUESTED'
   | 'NEW_RESPONSE'
   | 'DISPUTE_OPENED'
-  | 'DISPUTE_RESOLVED';
+  | 'DISPUTE_RESOLVED'
+  | 'SUBSCRIPTION_ACTIVATED';
 
 export interface NotificationItem {
   id: number;

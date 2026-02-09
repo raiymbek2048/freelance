@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, CheckCircle, RefreshCw, MessageSquare, AlertTriangle, Scale } from 'lucide-react';
+import { Bell, CheckCircle, RefreshCw, MessageSquare, AlertTriangle, Scale, CreditCard } from 'lucide-react';
 import { useNotificationStore } from '@/stores/notificationStore';
 import type { NotificationType } from '@/types';
 
@@ -11,6 +11,7 @@ const typeConfig: Record<NotificationType, { icon: React.ElementType; bgColor: s
   NEW_RESPONSE: { icon: MessageSquare, bgColor: 'bg-blue-100', iconColor: 'text-blue-600' },
   DISPUTE_OPENED: { icon: AlertTriangle, bgColor: 'bg-red-100', iconColor: 'text-red-600' },
   DISPUTE_RESOLVED: { icon: Scale, bgColor: 'bg-purple-100', iconColor: 'text-purple-600' },
+  SUBSCRIPTION_ACTIVATED: { icon: CreditCard, bgColor: 'bg-cyan-100', iconColor: 'text-cyan-600' },
 };
 
 function formatTime(dateStr: string): string {

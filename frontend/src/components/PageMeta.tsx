@@ -5,19 +5,13 @@ interface PageMetaProps {
   description?: string;
 }
 
-const SITE_NAME = 'FreelanceKG';
-
 export function PageMeta({ title, description }: PageMetaProps) {
-  const fullTitle = `${title} | ${SITE_NAME}`;
-
   return (
     <Helmet>
-      <title>{fullTitle}</title>
+      <title>{title}</title>
       {description && <meta name="description" content={description} />}
-      <meta property="og:title" content={fullTitle} />
+      <meta property="og:title" content={`${title} | FreelanceKG`} />
       {description && <meta property="og:description" content={description} />}
-      <meta property="og:site_name" content={SITE_NAME} />
-      <meta property="og:type" content="website" />
     </Helmet>
   );
 }
