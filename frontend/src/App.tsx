@@ -99,8 +99,8 @@ function AppContent() {
   return (
     <>
     <Helmet
-      defaultTitle="FreelanceKG — биржа фриланса для Кыргызстана"
-      titleTemplate="%s | FreelanceKG"
+      defaultTitle="Фриланс КГ — биржа фриланса и работа в Бишкеке и Кыргызстане"
+      titleTemplate="%s | Фриланс КГ"
     />
     <Routes>
       {/* Public routes */}

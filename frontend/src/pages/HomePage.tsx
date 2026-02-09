@@ -156,7 +156,7 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen relative">
-      <PageMeta title="Главная" description="FreelanceKG — биржа фриланса для Кыргызстана. Находите исполнителей для любых задач или предлагайте свои услуги." />
+      <PageMeta title="Главная" description="Фриланс КГ — биржа фриланса в Кыргызстане. Работа в Бишкеке, фриланс Бишкек. Найти исполнителя или фрилансера. Freelance KG — тысячи заказов." />
       {/* Blurred background layer */}
       <div
         className="fixed inset-0 -z-10"
@@ -768,6 +768,21 @@ export function HomePage() {
           </div>
         </div>
       )}
+
+      {/* SEO text */}
+      <div className="max-w-3xl mx-auto px-4 pb-6">
+        <div className="bg-white/80 backdrop-blur rounded-xl p-6 text-sm text-gray-600 leading-relaxed">
+          <h2 className="text-lg font-bold text-gray-800 mb-3">Фриланс КГ — биржа фриланса в Кыргызстане</h2>
+          <p className="mb-2">
+            FreelanceKG — это площадка для поиска работы и исполнителей в Бишкеке и по всему Кыргызстану.
+            Фриланс Бишкек, фриланс Кыргызстан — находите заказы и фрилансеров на одной платформе.
+          </p>
+          <p>
+            Размещайте задания, откликайтесь на заказы, общайтесь в чате и работайте удалённо.
+            Работа в Бишкеке и Кыргызстане для фрилансеров любых специальностей: дизайн, разработка, маркетинг, переводы и многое другое.
+          </p>
+        </div>
+      </div>
 
       {/* Footer */}
       <Footer />
