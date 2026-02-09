@@ -15,6 +15,8 @@ import kg.freelance.exception.ResourceNotFoundException;
 import kg.freelance.repository.*;
 import kg.freelance.service.DisputeService;
 import kg.freelance.service.EmailService;
+import kg.freelance.service.InAppNotificationService;
+import kg.freelance.entity.enums.NotificationType;
 import kg.freelance.websocket.dto.WsMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,6 +41,7 @@ public class DisputeServiceImpl implements DisputeService {
     private final ExecutorProfileRepository executorProfileRepository;
     private final MessageRepository messageRepository;
     private final EmailService emailService;
+    private final InAppNotificationService inAppNotificationService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
@@ -147,6 +150,17 @@ public class DisputeServiceImpl implements DisputeService {
         for (User admin : admins) {
             emailService.sendDisputeOpened(admin.getEmail(), admin.getFullName(), orderTitle, orderId, reason);
         }
+
+        // In-app notification to the other party
+        String initiatorRole = isClient ? "Заказчик" : "Исполнитель";
+        inAppNotificationService.send(
+                recipientUser,
+                NotificationType.DISPUTE_OPENED,
+                "Открыт спор",
+                initiatorRole + " открыл спор по заказу \"" + orderTitle + "\". Причина: " + reason,
+                order,
+                "/orders/" + orderId
+        );
 
         return mapToResponse(dispute);
     }
@@ -395,6 +409,27 @@ public class DisputeServiceImpl implements DisputeService {
         if (order.getExecutor() != null) {
             User executor = order.getExecutor();
             emailService.sendDisputeResolved(executor.getEmail(), executor.getFullName(), orderTitle, orderId, resolution, resolutionNotes);
+        }
+
+        // In-app notification to both parties
+        String notifMessage = "Спор по заказу \"" + orderTitle + "\" разрешён " + resolution + ".";
+        inAppNotificationService.send(
+                client,
+                NotificationType.DISPUTE_RESOLVED,
+                "Спор разрешён",
+                notifMessage,
+                order,
+                "/orders/" + orderId
+        );
+        if (order.getExecutor() != null) {
+            inAppNotificationService.send(
+                    order.getExecutor(),
+                    NotificationType.DISPUTE_RESOLVED,
+                    "Спор разрешён",
+                    notifMessage,
+                    order,
+                    "/orders/" + orderId
+            );
         }
 
         return mapToResponse(dispute);

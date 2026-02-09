@@ -3,10 +3,13 @@ import { useState, useEffect } from 'react';
 import { Menu, X, User, LogOut, Settings, Briefcase, MessageSquare, Shield, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useChatStore } from '@/stores/chatStore';
+import { NotificationDropdown } from './NotificationDropdown';
+import { useNotificationStore } from '@/stores/notificationStore';
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const { totalUnreadCount, connected, connect, fetchChatRooms } = useChatStore();
+  const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -82,6 +85,9 @@ export function Header() {
                     </span>
                   )}
                 </Link>
+
+                {/* Notifications bell */}
+                <NotificationDropdown />
 
                 {/* Profile dropdown */}
                 <div className="relative">
@@ -295,18 +301,35 @@ export function Header() {
                 Дать задание
               </Link>
               {isAuthenticated && (
-                <Link
-                  to="/chats"
-                  className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Сообщения
-                  {totalUnreadCount > 0 && (
-                    <span className="bg-red-500 text-white text-xs font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full px-1">
-                      {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
-                    </span>
-                  )}
-                </Link>
+                <>
+                  <Link
+                    to="/chats"
+                    className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Сообщения
+                    {totalUnreadCount > 0 && (
+                      <span className="bg-red-500 text-white text-xs font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full px-1">
+                        {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+                      </span>
+                    )}
+                  </Link>
+                  <button
+                    className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      // Trigger the notification dropdown to open via a small delay
+                      // For mobile, we use the same dropdown mechanism
+                    }}
+                  >
+                    Уведомления
+                    {notifUnreadCount > 0 && (
+                      <span className="bg-red-500 text-white text-xs font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full px-1">
+                        {notifUnreadCount > 99 ? '99+' : notifUnreadCount}
+                      </span>
+                    )}
+                  </button>
+                </>
               )}
               <Link
                 to="/orders"

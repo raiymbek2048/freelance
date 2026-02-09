@@ -13,8 +13,10 @@ import kg.freelance.service.ChatService;
 import kg.freelance.service.DisputeService;
 import kg.freelance.service.EmailService;
 import kg.freelance.service.ExecutorVerificationService;
+import kg.freelance.service.InAppNotificationService;
 import kg.freelance.service.OrderService;
 import kg.freelance.service.SubscriptionService;
+import kg.freelance.entity.enums.NotificationType;
 import kg.freelance.websocket.dto.WsMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -45,6 +47,7 @@ public class OrderServiceImpl implements OrderService {
     private final ChatService chatService;
     private final SubscriptionService subscriptionService;
     private final DisputeService disputeService;
+    private final InAppNotificationService inAppNotificationService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
@@ -232,6 +235,16 @@ public class OrderServiceImpl implements OrderService {
 
         // Send email notification
         emailService.sendExecutorSelected(executor, order);
+
+        // In-app notification to executor
+        inAppNotificationService.send(
+                executor,
+                NotificationType.EXECUTOR_SELECTED,
+                "Вы выбраны исполнителем",
+                "Вы выбраны исполнителем для заказа \"" + order.getTitle() + "\". Можете приступать к работе.",
+                order,
+                "/orders/" + order.getId()
+        );
     }
 
     @Override
@@ -305,6 +318,16 @@ public class OrderServiceImpl implements OrderService {
 
             // Send email notification to executor
             emailService.sendWorkApproved(order.getExecutor(), order);
+
+            // In-app notification to executor
+            inAppNotificationService.send(
+                    order.getExecutor(),
+                    NotificationType.WORK_APPROVED,
+                    "Работа принята",
+                    "Ваша работа по заказу \"" + order.getTitle() + "\" принята заказчиком.",
+                    order,
+                    "/orders/" + order.getId()
+            );
         }
     }
 
@@ -362,6 +385,20 @@ public class OrderServiceImpl implements OrderService {
 
             // Send email notification
             emailService.sendRevisionRequested(order.getExecutor(), order, reason);
+
+            // In-app notification to executor
+            String notifMessage = "Заказчик запросил доработку по заказу \"" + order.getTitle() + "\".";
+            if (reason != null && !reason.isBlank()) {
+                notifMessage += " Причина: " + reason;
+            }
+            inAppNotificationService.send(
+                    order.getExecutor(),
+                    NotificationType.REVISION_REQUESTED,
+                    "Запрошена доработка",
+                    notifMessage,
+                    order,
+                    "/orders/" + order.getId()
+            );
         }
     }
 
@@ -463,6 +500,16 @@ public class OrderServiceImpl implements OrderService {
 
         // Send email notification to client
         emailService.sendNewOrderResponse(order.getClient(), order, executor);
+
+        // In-app notification to client
+        inAppNotificationService.send(
+                order.getClient(),
+                NotificationType.NEW_RESPONSE,
+                "Новый отклик на заказ",
+                executor.getFullName() + " откликнулся на ваш заказ \"" + order.getTitle() + "\".",
+                order,
+                "/orders/" + order.getId()
+        );
 
         return mapResponseToDto(response);
     }

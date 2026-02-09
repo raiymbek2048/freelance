@@ -19,6 +19,7 @@ import kg.freelance.repository.*;
 import kg.freelance.service.ChatService;
 import kg.freelance.service.EmailService;
 import kg.freelance.service.ExecutorVerificationService;
+import kg.freelance.service.InAppNotificationService;
 import kg.freelance.service.SubscriptionService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,6 +81,9 @@ class OrderServiceImplTest {
 
     @Mock
     private ChatService chatService;
+
+    @Mock
+    private InAppNotificationService inAppNotificationService;
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;

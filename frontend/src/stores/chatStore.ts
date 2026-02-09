@@ -4,6 +4,7 @@ import { Client, type IMessage } from '@stomp/stompjs';
 import type { ChatRoom, Message } from '@/types';
 import { chatApi } from '@/api/chat';
 import { useAdminNotificationStore } from './adminNotificationStore';
+import { useNotificationStore } from './notificationStore';
 
 interface ChatState {
   chatRooms: ChatRoom[];
@@ -97,6 +98,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
             createdAt: notification.createdAt,
             read: false,
           });
+        });
+
+        // Subscribe to user notifications
+        client.subscribe('/user/queue/notifications', (message: IMessage) => {
+          const notification = JSON.parse(message.body);
+          useNotificationStore.getState().addNotification(notification);
         });
       },
       onDisconnect: () => {

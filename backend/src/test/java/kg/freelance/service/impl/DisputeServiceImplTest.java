@@ -17,6 +17,7 @@ import kg.freelance.exception.ForbiddenException;
 import kg.freelance.exception.ResourceNotFoundException;
 import kg.freelance.repository.*;
 import kg.freelance.service.EmailService;
+import kg.freelance.service.InAppNotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -67,6 +68,9 @@ class DisputeServiceImplTest {
 
     @Mock
     private EmailService emailService;
+
+    @Mock
+    private InAppNotificationService inAppNotificationService;
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;

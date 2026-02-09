@@ -462,3 +462,23 @@ export interface ResolveDisputeRequest {
   resolutionNotes?: string;
   adminNotes?: string;
 }
+
+// Notification types
+export type NotificationType =
+  | 'EXECUTOR_SELECTED'
+  | 'WORK_APPROVED'
+  | 'REVISION_REQUESTED'
+  | 'NEW_RESPONSE'
+  | 'DISPUTE_OPENED'
+  | 'DISPUTE_RESOLVED';
+
+export interface NotificationItem {
+  id: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  orderId?: number;
+  link?: string;
+  isRead: boolean;
+  createdAt: string;
+}
