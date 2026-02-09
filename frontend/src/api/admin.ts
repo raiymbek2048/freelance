@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { PageResponse } from '@/types';
+import type { PageResponse, DisputeResponse, ResolveDisputeRequest, Message } from '@/types';
 
 // Admin Types
 export interface AdminStats {
@@ -247,5 +247,66 @@ export const adminApi = {
 
   rejectVerification: async (userId: number, reason: string): Promise<void> => {
     await apiClient.put(`/admin/verifications/${userId}/reject?reason=${encodeURIComponent(reason)}`);
+  },
+
+  // Disputes (structured API)
+  getDisputesList: async (page = 0, size = 20, status?: string): Promise<PageResponse<DisputeResponse>> => {
+    const params = new URLSearchParams();
+    params.append('page', String(page));
+    params.append('size', String(size));
+    if (status) params.append('status', status);
+    const response = await apiClient.get<PageResponse<DisputeResponse>>(`/admin/disputes?${params}`);
+    return response.data;
+  },
+
+  getActiveDisputesList: async (page = 0, size = 20): Promise<PageResponse<DisputeResponse>> => {
+    const response = await apiClient.get<PageResponse<DisputeResponse>>(
+      `/admin/disputes/active?page=${page}&size=${size}`
+    );
+    return response.data;
+  },
+
+  getDisputeDetail: async (id: number): Promise<DisputeResponse> => {
+    const response = await apiClient.get<DisputeResponse>(`/admin/disputes/${id}`);
+    return response.data;
+  },
+
+  takeDisputeForReview: async (id: number): Promise<DisputeResponse> => {
+    const response = await apiClient.put<DisputeResponse>(`/admin/disputes/${id}/take`);
+    return response.data;
+  },
+
+  addDisputeNotes: async (id: number, notes: string): Promise<DisputeResponse> => {
+    const response = await apiClient.put<DisputeResponse>(
+      `/admin/disputes/${id}/notes?notes=${encodeURIComponent(notes)}`
+    );
+    return response.data;
+  },
+
+  resolveDisputeNew: async (id: number, data: ResolveDisputeRequest): Promise<DisputeResponse> => {
+    const response = await apiClient.put<DisputeResponse>(`/admin/disputes/${id}/resolve`, data);
+    return response.data;
+  },
+
+  getDisputeMessages: async (id: number, page = 0, size = 100): Promise<PageResponse<Message>> => {
+    const response = await apiClient.get<PageResponse<Message>>(
+      `/admin/disputes/${id}/messages?page=${page}&size=${size}`
+    );
+    return response.data;
+  },
+
+  // Analytics export
+  exportAnalyticsCsv: async (): Promise<void> => {
+    const response = await apiClient.get('/admin/stats/export/csv', {
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'analytics.csv');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
   },
 };

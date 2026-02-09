@@ -36,10 +36,10 @@ public class OAuth2Controller {
     @GetMapping("/callback/google")
     @Operation(summary = "Google OAuth callback")
     public ResponseEntity<Void> googleCallback(
-            @RequestParam("code") String code,
+            @RequestParam(value = "code", required = false) String code,
             @RequestParam(value = "error", required = false) String error) {
 
-        if (error != null) {
+        if (error != null || code == null) {
             log.error("Google OAuth error: {}", error);
             return ResponseEntity.status(HttpStatus.FOUND)
                     .location(URI.create(frontendUrl + "/login?error=oauth_failed"))

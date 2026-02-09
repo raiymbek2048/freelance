@@ -9,7 +9,10 @@ import kg.freelance.entity.enums.UserRole;
 import kg.freelance.exception.BadRequestException;
 import kg.freelance.exception.ResourceNotFoundException;
 import kg.freelance.repository.*;
+import kg.freelance.dto.request.ResolveDisputeRequest;
+import kg.freelance.repository.DisputeRepository;
 import kg.freelance.service.AdminService;
+import kg.freelance.service.DisputeService;
 import kg.freelance.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,6 +41,8 @@ public class AdminServiceImpl implements AdminService {
     private final ExecutorProfileRepository executorProfileRepository;
     private final ReviewService reviewService;
     private final UserSubscriptionRepository userSubscriptionRepository;
+    private final DisputeRepository disputeRepository;
+    private final DisputeService disputeService;
     private final SubscriptionSettingsRepository subscriptionSettingsRepository;
     private final OrderResponseRepository orderResponseRepository;
 
@@ -136,30 +141,29 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional
     public void resolveDispute(Long orderId, boolean favorClient, String resolution) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+        kg.freelance.entity.Dispute dispute = disputeRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new BadRequestException("No dispute found for order " + orderId));
 
-        if (order.getStatus() != OrderStatus.DISPUTED) {
-            throw new BadRequestException("Order is not in dispute");
-        }
+        // Find an admin user to attribute the resolution (use first admin)
+        List<User> admins = userRepository.findByRole(UserRole.ADMIN);
+        Long adminId = admins.isEmpty() ? null : admins.get(0).getId();
 
-        if (favorClient) {
-            order.setStatus(OrderStatus.CANCELLED);
+        if (adminId != null) {
+            ResolveDisputeRequest request = new ResolveDisputeRequest(favorClient, resolution, null);
+            disputeService.resolveDispute(dispute.getId(), adminId, request);
         } else {
-            order.setStatus(OrderStatus.COMPLETED);
-            order.setCompletedAt(LocalDateTime.now());
+            // Fallback: resolve directly if no admin found
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
 
-            // Update executor completed orders
-            if (order.getExecutor() != null) {
-                ExecutorProfile profile = executorProfileRepository.findById(order.getExecutor().getId()).orElse(null);
-                if (profile != null) {
-                    profile.setCompletedOrders(profile.getCompletedOrders() + 1);
-                    executorProfileRepository.save(profile);
-                }
+            if (favorClient) {
+                order.setStatus(OrderStatus.CANCELLED);
+            } else {
+                order.setStatus(OrderStatus.COMPLETED);
+                order.setCompletedAt(LocalDateTime.now());
             }
+            orderRepository.save(order);
         }
-
-        orderRepository.save(order);
     }
 
     @Override
@@ -333,79 +337,43 @@ public class AdminServiceImpl implements AdminService {
         LocalDateTime weekStart = now.minusDays(7);
         LocalDateTime monthStart = now.minusDays(30);
 
-        List<User> allUsers = userRepository.findAll();
-        List<Order> allOrders = orderRepository.findAll();
-        List<Review> allReviews = reviewRepository.findAll();
-
-        long totalUsers = allUsers.size();
-        long activeUsers = allUsers.stream().filter(User::getActive).count();
+        long totalUsers = userRepository.count();
+        long activeUsers = userRepository.countByActiveTrue();
         long executors = executorProfileRepository.count();
-        long totalOrders = allOrders.size();
-        long totalReviews = allReviews.size();
+        long totalOrders = orderRepository.count();
+        long totalReviews = reviewRepository.count();
 
-        // New users by time period
-        long newUsersToday = allUsers.stream()
-                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(todayStart))
-                .count();
-        long newUsersThisWeek = allUsers.stream()
-                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(weekStart))
-                .count();
-        long newUsersThisMonth = allUsers.stream()
-                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(monthStart))
-                .count();
+        long newUsersToday = userRepository.countByCreatedAtAfter(todayStart);
+        long newUsersThisWeek = userRepository.countByCreatedAtAfter(weekStart);
+        long newUsersThisMonth = userRepository.countByCreatedAtAfter(monthStart);
 
-        // Count orders by status
-        long newOrders = allOrders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.NEW).count();
-        long inProgressOrders = allOrders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.IN_PROGRESS || o.getStatus() == OrderStatus.REVISION).count();
-        long completedOrders = allOrders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.COMPLETED).count();
-        long disputedOrders = allOrders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.DISPUTED).count();
-        long cancelledOrders = allOrders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.CANCELLED).count();
+        long newOrders = orderRepository.countByStatus(OrderStatus.NEW);
+        long inProgressOrders = orderRepository.countByStatus(OrderStatus.IN_PROGRESS)
+                + orderRepository.countByStatus(OrderStatus.REVISION);
+        long completedOrders = orderRepository.countByStatus(OrderStatus.COMPLETED);
+        long disputedOrders = orderRepository.countByStatus(OrderStatus.DISPUTED);
+        long cancelledOrders = orderRepository.countByStatus(OrderStatus.CANCELLED);
 
-        // Financial stats
-        BigDecimal totalOrdersValue = allOrders.stream()
-                .filter(o -> o.getAgreedPrice() != null)
-                .map(Order::getAgreedPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        long ordersWithPrice = allOrders.stream().filter(o -> o.getAgreedPrice() != null).count();
+        BigDecimal totalOrdersValue = orderRepository.sumAgreedPrice();
+        long ordersWithPrice = orderRepository.countWithAgreedPrice();
         BigDecimal averageOrderValue = ordersWithPrice > 0
-                ? totalOrdersValue.divide(BigDecimal.valueOf(ordersWithPrice), 2, java.math.RoundingMode.HALF_UP)
+                ? totalOrdersValue.divide(BigDecimal.valueOf(ordersWithPrice), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
-        // Pending moderation
-        long pendingModeration = allReviews.stream()
-                .filter(r -> !r.getIsModerated()).count();
+        long pendingModeration = reviewRepository.countByIsModeratedFalse();
+        Double avgRating = reviewRepository.calculateOverallAverageRating();
+        if (avgRating == null) avgRating = 0.0;
 
-        // Average rating
-        Double avgRating = allReviews.stream()
-                .filter(Review::getIsVisible)
-                .mapToInt(Review::getRating)
-                .average()
-                .orElse(0.0);
-
-        // Top categories
-        List<AdminStatsResponse.CategoryStats> topCategories = categoryRepository.findAll().stream()
+        // Top categories by order count (efficient single query)
+        List<Object[]> categoryOrderCounts = orderRepository.countOrdersByCategory();
+        List<AdminStatsResponse.CategoryStats> topCategories = categoryOrderCounts.stream()
                 .limit(5)
-                .map(cat -> {
-                    long orderCount = allOrders.stream()
-                            .filter(o -> o.getCategory().getId().equals(cat.getId()))
-                            .count();
-                    long executorCount = executorProfileRepository.findAll().stream()
-                            .filter(ep -> ep.getCategories().stream()
-                                    .anyMatch(c -> c.getId().equals(cat.getId())))
-                            .count();
-                    return AdminStatsResponse.CategoryStats.builder()
-                            .categoryId(cat.getId())
-                            .categoryName(cat.getName())
-                            .orderCount(orderCount)
-                            .executorCount(executorCount)
-                            .build();
-                })
-                .sorted((a, b) -> Long.compare(b.getOrderCount(), a.getOrderCount()))
+                .map(row -> AdminStatsResponse.CategoryStats.builder()
+                        .categoryId((Long) row[0])
+                        .categoryName((String) row[1])
+                        .orderCount((Long) row[2])
+                        .executorCount(0L)
+                        .build())
                 .collect(Collectors.toList());
 
         return AdminStatsResponse.builder()
@@ -532,11 +500,6 @@ public class AdminServiceImpl implements AdminService {
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
 
-        List<User> allUsers = userRepository.findAll();
-        List<Order> allOrders = orderRepository.findAll();
-        List<UserSubscription> allSubscriptions = userSubscriptionRepository.findAll();
-        List<OrderResponse> allResponses = orderResponseRepository.findAll();
-
         BigDecimal subscriptionPrice = subscriptionSettingsRepository.getSettings().getPrice();
 
         // Daily stats (last 30 days)
@@ -546,18 +509,11 @@ public class AdminServiceImpl implements AdminService {
             LocalDateTime dayStart = date.atStartOfDay();
             LocalDateTime dayEnd = date.atTime(LocalTime.MAX);
 
-            long newUsers = allUsers.stream()
-                    .filter(u -> u.getCreatedAt() != null && isWithinPeriod(u.getCreatedAt(), dayStart, dayEnd))
-                    .count();
-            long newOrders = allOrders.stream()
-                    .filter(o -> o.getCreatedAt() != null && isWithinPeriod(o.getCreatedAt(), dayStart, dayEnd))
-                    .count();
-            long completedOrders = allOrders.stream()
-                    .filter(o -> o.getCompletedAt() != null && isWithinPeriod(o.getCompletedAt(), dayStart, dayEnd))
-                    .count();
-            long newActiveSubscriptions = allSubscriptions.stream()
-                    .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && isWithinPeriod(s.getCreatedAt(), dayStart, dayEnd))
-                    .count();
+            long newUsers = userRepository.countByCreatedAtBetween(dayStart, dayEnd);
+            long newOrders = orderRepository.countByCreatedAtBetween(dayStart, dayEnd);
+            long completedOrders = orderRepository.countCompletedBetween(dayStart, dayEnd);
+            long newActiveSubscriptions = userSubscriptionRepository.countByStatusAndCreatedAtBetween(
+                    SubscriptionStatus.ACTIVE, dayStart, dayEnd);
             BigDecimal revenue = subscriptionPrice.multiply(BigDecimal.valueOf(newActiveSubscriptions));
 
             dailyStats.add(AnalyticsResponse.DailyStats.builder()
@@ -577,18 +533,11 @@ public class AdminServiceImpl implements AdminService {
             LocalDateTime weekStartTime = weekStart.atStartOfDay();
             LocalDateTime weekEndTime = weekEnd.atTime(LocalTime.MAX);
 
-            long newUsers = allUsers.stream()
-                    .filter(u -> u.getCreatedAt() != null && isWithinPeriod(u.getCreatedAt(), weekStartTime, weekEndTime))
-                    .count();
-            long newOrders = allOrders.stream()
-                    .filter(o -> o.getCreatedAt() != null && isWithinPeriod(o.getCreatedAt(), weekStartTime, weekEndTime))
-                    .count();
-            long completedOrders = allOrders.stream()
-                    .filter(o -> o.getCompletedAt() != null && isWithinPeriod(o.getCompletedAt(), weekStartTime, weekEndTime))
-                    .count();
-            long newActiveSubscriptions = allSubscriptions.stream()
-                    .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && isWithinPeriod(s.getCreatedAt(), weekStartTime, weekEndTime))
-                    .count();
+            long newUsers = userRepository.countByCreatedAtBetween(weekStartTime, weekEndTime);
+            long newOrders = orderRepository.countByCreatedAtBetween(weekStartTime, weekEndTime);
+            long completedOrders = orderRepository.countCompletedBetween(weekStartTime, weekEndTime);
+            long newActiveSubscriptions = userSubscriptionRepository.countByStatusAndCreatedAtBetween(
+                    SubscriptionStatus.ACTIVE, weekStartTime, weekEndTime);
             BigDecimal revenue = subscriptionPrice.multiply(BigDecimal.valueOf(newActiveSubscriptions));
 
             weeklyStats.add(AnalyticsResponse.WeeklyStats.builder()
@@ -608,18 +557,11 @@ public class AdminServiceImpl implements AdminService {
             LocalDateTime monthStartTime = monthStart.atStartOfDay();
             LocalDateTime monthEndTime = monthEnd.atTime(LocalTime.MAX);
 
-            long newUsers = allUsers.stream()
-                    .filter(u -> u.getCreatedAt() != null && isWithinPeriod(u.getCreatedAt(), monthStartTime, monthEndTime))
-                    .count();
-            long newOrders = allOrders.stream()
-                    .filter(o -> o.getCreatedAt() != null && isWithinPeriod(o.getCreatedAt(), monthStartTime, monthEndTime))
-                    .count();
-            long completedOrders = allOrders.stream()
-                    .filter(o -> o.getCompletedAt() != null && isWithinPeriod(o.getCompletedAt(), monthStartTime, monthEndTime))
-                    .count();
-            long newActiveSubscriptions = allSubscriptions.stream()
-                    .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && isWithinPeriod(s.getCreatedAt(), monthStartTime, monthEndTime))
-                    .count();
+            long newUsers = userRepository.countByCreatedAtBetween(monthStartTime, monthEndTime);
+            long newOrders = orderRepository.countByCreatedAtBetween(monthStartTime, monthEndTime);
+            long completedOrders = orderRepository.countCompletedBetween(monthStartTime, monthEndTime);
+            long newActiveSubscriptions = userSubscriptionRepository.countByStatusAndCreatedAtBetween(
+                    SubscriptionStatus.ACTIVE, monthStartTime, monthEndTime);
             BigDecimal revenue = subscriptionPrice.multiply(BigDecimal.valueOf(newActiveSubscriptions));
 
             String monthName = monthStart.getMonth().getDisplayName(TextStyle.SHORT, new Locale("ru"));
@@ -636,32 +578,22 @@ public class AdminServiceImpl implements AdminService {
         }
 
         // Subscription analytics
-        long totalSubscriptions = allSubscriptions.size();
-        long activeSubscriptions = allSubscriptions.stream()
-                .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && s.getEndDate().isAfter(now))
-                .count();
-        long trialSubscriptions = allSubscriptions.stream()
-                .filter(s -> s.getStatus() == SubscriptionStatus.TRIAL && s.getEndDate().isAfter(now))
-                .count();
-        long expiredSubscriptions = allSubscriptions.stream()
-                .filter(s -> s.getEndDate().isBefore(now) || s.getStatus() == SubscriptionStatus.EXPIRED)
-                .count();
+        long totalSubscriptions = userSubscriptionRepository.count();
+        long activeSubscriptions = userSubscriptionRepository.countCurrentlyActive(now);
+        long trialSubscriptions = userSubscriptionRepository.countCurrentlyTrial(now);
+        long expiredSubscriptions = userSubscriptionRepository.countExpired(now);
 
-        long totalPaidSubscriptions = allSubscriptions.stream()
-                .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE)
-                .count();
+        long totalPaidSubscriptions = userSubscriptionRepository.countByStatus(SubscriptionStatus.ACTIVE);
         BigDecimal totalRevenue = subscriptionPrice.multiply(BigDecimal.valueOf(totalPaidSubscriptions));
 
         LocalDateTime thisMonthStart = today.withDayOfMonth(1).atStartOfDay();
         LocalDateTime lastMonthStart = today.minusMonths(1).withDayOfMonth(1).atStartOfDay();
         LocalDateTime lastMonthEnd = thisMonthStart.minusSeconds(1);
 
-        long subscriptionsThisMonth = allSubscriptions.stream()
-                .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && s.getCreatedAt().isAfter(thisMonthStart))
-                .count();
-        long subscriptionsLastMonth = allSubscriptions.stream()
-                .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && isWithinPeriod(s.getCreatedAt(), lastMonthStart, lastMonthEnd))
-                .count();
+        long subscriptionsThisMonth = userSubscriptionRepository.countByStatusAndCreatedAtBetween(
+                SubscriptionStatus.ACTIVE, thisMonthStart, now);
+        long subscriptionsLastMonth = userSubscriptionRepository.countByStatusAndCreatedAtBetween(
+                SubscriptionStatus.ACTIVE, lastMonthStart, lastMonthEnd);
 
         BigDecimal revenueThisMonth = subscriptionPrice.multiply(BigDecimal.valueOf(subscriptionsThisMonth));
         BigDecimal revenueLastMonth = subscriptionPrice.multiply(BigDecimal.valueOf(subscriptionsLastMonth));
@@ -673,9 +605,8 @@ public class AdminServiceImpl implements AdminService {
             LocalDateTime dayStart = date.atStartOfDay();
             LocalDateTime dayEnd = date.atTime(LocalTime.MAX);
 
-            long newSubs = allSubscriptions.stream()
-                    .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE && isWithinPeriod(s.getCreatedAt(), dayStart, dayEnd))
-                    .count();
+            long newSubs = userSubscriptionRepository.countByStatusAndCreatedAtBetween(
+                    SubscriptionStatus.ACTIVE, dayStart, dayEnd);
 
             subscriptionByPeriod.add(AnalyticsResponse.SubscriptionByPeriod.builder()
                     .date(date)
@@ -696,19 +627,13 @@ public class AdminServiceImpl implements AdminService {
                 .build();
 
         // Conversion stats
-        long totalUsersCount = allUsers.size();
+        long totalUsersCount = userRepository.count();
         long executorsCount = executorProfileRepository.count();
-        long verifiedExecutors = allUsers.stream()
-                .filter(u -> Boolean.TRUE.equals(u.getExecutorVerified()))
-                .count();
-        long totalOrdersCount = allOrders.size();
-        long completedOrdersCount = allOrders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.COMPLETED)
-                .count();
-        long totalResponsesCount = allResponses.size();
-        long selectedResponsesCount = allResponses.stream()
-                .filter(r -> Boolean.TRUE.equals(r.getIsSelected()))
-                .count();
+        long verifiedExecutors = userRepository.countVerifiedExecutors();
+        long totalOrdersCount = orderRepository.count();
+        long completedOrdersCount = orderRepository.countByStatus(OrderStatus.COMPLETED);
+        long totalResponsesCount = orderResponseRepository.count();
+        long selectedResponsesCount = orderResponseRepository.countSelected();
 
         Double registrationToExecutorRate = totalUsersCount > 0
                 ? (executorsCount * 100.0 / totalUsersCount)
@@ -739,8 +664,87 @@ public class AdminServiceImpl implements AdminService {
                 .build();
     }
 
-    private boolean isWithinPeriod(LocalDateTime dateTime, LocalDateTime start, LocalDateTime end) {
-        return !dateTime.isBefore(start) && !dateTime.isAfter(end);
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] exportAnalyticsCsv() {
+        AnalyticsResponse analytics = getAnalytics();
+        AdminStatsResponse overview = getOverviewStats();
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("Аналитика платформы FreelanceKG\n\n");
+
+        // Overview
+        csv.append("ОБЗОР\n");
+        csv.append("Показатель,Значение\n");
+        csv.append("Всего пользователей,").append(overview.getTotalUsers()).append("\n");
+        csv.append("Активных пользователей,").append(overview.getActiveUsers()).append("\n");
+        csv.append("Исполнителей,").append(overview.getExecutors()).append("\n");
+        csv.append("Всего заказов,").append(overview.getTotalOrders()).append("\n");
+        csv.append("Завершённых заказов,").append(overview.getCompletedOrders()).append("\n");
+        csv.append("Общая стоимость заказов,").append(overview.getTotalOrdersValue()).append("\n");
+        csv.append("Средняя стоимость заказа,").append(overview.getAverageOrderValue()).append("\n");
+        csv.append("\n");
+
+        // Daily stats
+        csv.append("ЕЖЕДНЕВНАЯ СТАТИСТИКА (последние 30 дней)\n");
+        csv.append("Дата,Новые пользователи,Новые заказы,Завершённые заказы,Доход\n");
+        for (AnalyticsResponse.DailyStats ds : analytics.getDailyStats()) {
+            csv.append(ds.getDate()).append(",")
+                    .append(ds.getNewUsers()).append(",")
+                    .append(ds.getNewOrders()).append(",")
+                    .append(ds.getCompletedOrders()).append(",")
+                    .append(ds.getRevenue()).append("\n");
+        }
+        csv.append("\n");
+
+        // Weekly stats
+        csv.append("ЕЖЕНЕДЕЛЬНАЯ СТАТИСТИКА (последние 12 недель)\n");
+        csv.append("Начало недели,Новые пользователи,Новые заказы,Завершённые заказы,Доход\n");
+        for (AnalyticsResponse.WeeklyStats ws : analytics.getWeeklyStats()) {
+            csv.append(ws.getWeekStart()).append(",")
+                    .append(ws.getNewUsers()).append(",")
+                    .append(ws.getNewOrders()).append(",")
+                    .append(ws.getCompletedOrders()).append(",")
+                    .append(ws.getRevenue()).append("\n");
+        }
+        csv.append("\n");
+
+        // Monthly stats
+        csv.append("ЕЖЕМЕСЯЧНАЯ СТАТИСТИКА (последние 12 месяцев)\n");
+        csv.append("Месяц,Год,Новые пользователи,Новые заказы,Завершённые заказы,Доход\n");
+        for (AnalyticsResponse.MonthlyStats ms : analytics.getMonthlyStats()) {
+            csv.append(ms.getMonthName()).append(",")
+                    .append(ms.getYear()).append(",")
+                    .append(ms.getNewUsers()).append(",")
+                    .append(ms.getNewOrders()).append(",")
+                    .append(ms.getCompletedOrders()).append(",")
+                    .append(ms.getRevenue()).append("\n");
+        }
+        csv.append("\n");
+
+        // Subscriptions
+        AnalyticsResponse.SubscriptionAnalytics subs = analytics.getSubscriptions();
+        csv.append("ПОДПИСКИ\n");
+        csv.append("Показатель,Значение\n");
+        csv.append("Всего подписок,").append(subs.getTotalSubscriptions()).append("\n");
+        csv.append("Активных,").append(subs.getActiveSubscriptions()).append("\n");
+        csv.append("Триал,").append(subs.getTrialSubscriptions()).append("\n");
+        csv.append("Истекших,").append(subs.getExpiredSubscriptions()).append("\n");
+        csv.append("Общий доход,").append(subs.getTotalRevenue()).append("\n");
+        csv.append("Доход за этот месяц,").append(subs.getRevenueThisMonth()).append("\n");
+        csv.append("Доход за прошлый месяц,").append(subs.getRevenueLastMonth()).append("\n");
+        csv.append("\n");
+
+        // Conversions
+        AnalyticsResponse.ConversionStats conv = analytics.getConversions();
+        csv.append("КОНВЕРСИИ\n");
+        csv.append("Показатель,Значение (%)\n");
+        csv.append("Регистрация → Исполнитель,").append(conv.getRegistrationToExecutorRate()).append("\n");
+        csv.append("Исполнитель → Верификация,").append(conv.getExecutorToVerifiedRate()).append("\n");
+        csv.append("Завершение заказов,").append(conv.getOrderCompletionRate()).append("\n");
+        csv.append("Отклик → Выбор,").append(conv.getResponseToSelectionRate()).append("\n");
+
+        return csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 
     private Double round(Double value) {

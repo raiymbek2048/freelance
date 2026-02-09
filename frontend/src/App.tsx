@@ -19,9 +19,11 @@ import { ProfilePage } from '@/pages/ProfilePage';
 import { VerificationPage } from '@/pages/VerificationPage';
 import { VacanciesPage } from '@/pages/VacanciesPage';
 import { AdsPage } from '@/pages/AdsPage';
+import { DisputeDetailPage } from '@/pages/orders/DisputeDetailPage';
 import {
   AdminDashboardPage,
   AdminDisputesPage,
+  AdminDisputeDetailPage,
   AdminOrdersPage,
   AdminUsersPage,
   AdminVerificationsPage,
@@ -143,6 +145,14 @@ function AppContent() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/orders/:id/dispute"
+        element={
+          <ProtectedRoute>
+            <DisputeDetailPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Admin routes */}
       <Route
@@ -158,6 +168,14 @@ function AppContent() {
         element={
           <AdminRoute>
             <AdminDisputesPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/disputes/:id"
+        element={
+          <AdminRoute>
+            <AdminDisputeDetailPage />
           </AdminRoute>
         }
       />

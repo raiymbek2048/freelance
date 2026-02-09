@@ -7,6 +7,8 @@ import kg.freelance.dto.response.AdminStatsResponse;
 import kg.freelance.dto.response.AnalyticsResponse;
 import kg.freelance.service.AdminService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,5 +35,15 @@ public class AdminStatsController {
     public ResponseEntity<AnalyticsResponse> getAnalytics() {
         AnalyticsResponse response = adminService.getAnalytics();
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/export/csv")
+    @Operation(summary = "Export analytics as CSV", description = "Download platform analytics data as a CSV file")
+    public ResponseEntity<byte[]> exportCsv() {
+        byte[] csvData = adminService.exportAnalyticsCsv();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=analytics.csv")
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(csvData);
     }
 }

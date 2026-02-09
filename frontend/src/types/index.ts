@@ -392,3 +392,68 @@ export interface UserSubscriptionResponse {
 export interface GrantSubscriptionRequest {
   days: number;
 }
+
+// Dispute types
+export type DisputeStatusType = 'OPEN' | 'UNDER_REVIEW' | 'RESOLVED';
+export type DisputeResolution = 'FAVOR_CLIENT' | 'FAVOR_EXECUTOR';
+
+export interface DisputeResponse {
+  id: number;
+  orderId: number;
+  orderTitle: string;
+  openedById: number;
+  openedByName: string;
+  openedByRole: string;
+  clientId: number;
+  clientName: string;
+  clientEmail: string;
+  clientAvatarUrl?: string;
+  executorId: number;
+  executorName: string;
+  executorEmail: string;
+  executorAvatarUrl?: string;
+  reason: string;
+  status: DisputeStatusType;
+  adminId?: number;
+  adminName?: string;
+  adminNotes?: string;
+  resolution?: DisputeResolution;
+  resolutionNotes?: string;
+  chatRoomId?: number;
+  evidence: DisputeEvidenceResponse[];
+  evidenceCount: number;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+}
+
+export interface DisputeEvidenceResponse {
+  id: number;
+  uploadedById: number;
+  uploadedByName: string;
+  uploadedByRole: string;
+  fileUrl: string;
+  fileName: string;
+  fileType?: string;
+  fileSize?: number;
+  description?: string;
+  createdAt: string;
+}
+
+export interface OpenDisputeRequest {
+  reason: string;
+}
+
+export interface DisputeEvidenceRequest {
+  fileUrl: string;
+  fileName: string;
+  fileType?: string;
+  fileSize?: number;
+  description?: string;
+}
+
+export interface ResolveDisputeRequest {
+  favorClient: boolean;
+  resolutionNotes?: string;
+  adminNotes?: string;
+}

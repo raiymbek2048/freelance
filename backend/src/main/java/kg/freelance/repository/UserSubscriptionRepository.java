@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -31,4 +32,21 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
 
     @Query("SELECT us FROM UserSubscription us WHERE us.user.id = :userId ORDER BY us.createdAt DESC")
     List<UserSubscription> findAllByUserId(Long userId);
+
+    // Analytics queries
+    long countByStatus(SubscriptionStatus status);
+
+    @Query("SELECT COUNT(us) FROM UserSubscription us WHERE us.status = :status AND us.createdAt BETWEEN :start AND :end")
+    long countByStatusAndCreatedAtBetween(@Param("status") SubscriptionStatus status,
+                                          @Param("start") LocalDateTime start,
+                                          @Param("end") LocalDateTime end);
+
+    @Query("SELECT COUNT(us) FROM UserSubscription us WHERE us.status = 'ACTIVE' AND us.endDate > :now")
+    long countCurrentlyActive(@Param("now") LocalDateTime now);
+
+    @Query("SELECT COUNT(us) FROM UserSubscription us WHERE us.status = 'TRIAL' AND us.endDate > :now")
+    long countCurrentlyTrial(@Param("now") LocalDateTime now);
+
+    @Query("SELECT COUNT(us) FROM UserSubscription us WHERE us.endDate < :now OR us.status = 'EXPIRED'")
+    long countExpired(@Param("now") LocalDateTime now);
 }

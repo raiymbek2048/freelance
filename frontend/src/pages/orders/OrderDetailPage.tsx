@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { Layout } from '@/components/layout';
 import { Button, Card, Badge, Avatar, Textarea, Input, Modal, Rating } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
+import { disputesApi } from '@/api/disputes';
 import { chatApi } from '@/api/chat';
 import { useAuthStore } from '@/stores/authStore';
 import type { OrderStatus, OrderResponse } from '@/types';
@@ -60,6 +61,7 @@ export function OrderDetailPage() {
   const [reviewComment, setReviewComment] = useState('');
   const [revisionReason, setRevisionReason] = useState('');
   const [disputeReason, setDisputeReason] = useState('');
+  const [disputeError, setDisputeError] = useState('');
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editBudget, setEditBudget] = useState<number | undefined>();
@@ -146,11 +148,15 @@ export function OrderDetailPage() {
   });
 
   const disputeMutation = useMutation({
-    mutationFn: () => ordersApi.openDispute(Number(id), disputeReason || undefined),
+    mutationFn: () => disputesApi.openDispute(Number(id), { reason: disputeReason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['order', id] });
       setShowDisputeModal(false);
       setDisputeReason('');
+      setDisputeError('');
+    },
+    onError: (error: Error) => {
+      setDisputeError(error.message || 'Произошла ошибка');
     },
   });
 
@@ -398,6 +404,32 @@ export function OrderDetailPage() {
                 </div>
               </Card>
             )}
+
+            {/* Dispute status section */}
+            {order.status === 'DISPUTED' && (isClient || isExecutor) && (
+              <Card padding="lg">
+                <div className="flex items-center gap-3 mb-4">
+                  <AlertTriangle className="w-6 h-6 text-red-500" />
+                  <h2 className="text-lg font-semibold text-red-700">Открыт спор</h2>
+                </div>
+                <p className="text-gray-600 mb-4">
+                  По данному заказу открыт спор. Модератор рассмотрит ситуацию и примет решение.
+                  Вы можете загрузить доказательства и общаться в чате.
+                </p>
+                <div className="flex gap-3">
+                  <Link to={`/orders/${order.id}/dispute`}>
+                    <Button>
+                      <Shield className="w-4 h-4 mr-1" /> Перейти к спору
+                    </Button>
+                  </Link>
+                  <Link to="/chats">
+                    <Button variant="outline">
+                      <MessageSquare className="w-4 h-4 mr-1" /> Чат
+                    </Button>
+                  </Link>
+                </div>
+              </Card>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -625,17 +657,33 @@ export function OrderDetailPage() {
           </div>
           <Textarea
             label="Причина спора"
-            placeholder="Опишите проблему подробно..."
+            placeholder="Опишите проблему подробно (минимум 10 символов)..."
             rows={4}
             value={disputeReason}
-            onChange={(e) => setDisputeReason(e.target.value)}
+            onChange={(e) => { setDisputeReason(e.target.value); setDisputeError(''); }}
           />
+          {disputeError && (
+            <p className="text-sm text-red-600">{disputeError}</p>
+          )}
+          {disputeReason.length > 0 && disputeReason.length < 10 && (
+            <p className="text-sm text-gray-500">{disputeReason.length}/10 символов</p>
+          )}
         </div>
         <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setShowDisputeModal(false)}>
+          <Button variant="outline" onClick={() => { setShowDisputeModal(false); setDisputeError(''); }}>
             Отмена
           </Button>
-          <Button variant="danger" onClick={() => disputeMutation.mutate()} loading={disputeMutation.isPending}>
+          <Button
+            variant="danger"
+            onClick={() => {
+              if (disputeReason.trim().length < 10) {
+                setDisputeError('Причина должна быть не менее 10 символов');
+                return;
+              }
+              disputeMutation.mutate();
+            }}
+            loading={disputeMutation.isPending}
+          >
             Открыть спор
           </Button>
         </div>

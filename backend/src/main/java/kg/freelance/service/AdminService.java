@@ -54,4 +54,6 @@ public interface AdminService {
 
     // Analytics
     AnalyticsResponse getAnalytics();
+
+    byte[] exportAnalyticsCsv();
 }

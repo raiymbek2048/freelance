@@ -26,4 +26,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     long countByExecutorId(@Param("executorId") Long executorId);
 
     Page<Review> findByIsModeratedFalseOrderByCreatedAtAsc(Pageable pageable);
+
+    // Analytics queries
+    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.isVisible = true")
+    Double calculateOverallAverageRating();
+
+    long countByIsModeratedFalse();
 }

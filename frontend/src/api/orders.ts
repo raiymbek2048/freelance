@@ -84,7 +84,7 @@ export const ordersApi = {
   },
 
   openDispute: async (id: number, reason?: string): Promise<void> => {
-    await apiClient.post(`/orders/${id}/dispute`, null, { params: reason ? { reason } : {} });
+    await apiClient.post(`/orders/${id}/dispute`, { reason: reason || '' });
   },
 
   // Reviews

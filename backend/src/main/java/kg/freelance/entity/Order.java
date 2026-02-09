@@ -107,4 +107,7 @@ public class Order {
 
     @OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
     private Review review;
+
+    @OneToOne(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Dispute dispute;
 }

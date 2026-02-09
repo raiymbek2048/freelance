@@ -1,13 +1,12 @@
 package kg.freelance.service.impl;
 
 import kg.freelance.dto.request.CategoryCreateRequest;
-import kg.freelance.dto.response.AdminOrderResponse;
-import kg.freelance.dto.response.AdminUserResponse;
-import kg.freelance.dto.response.CategoryResponse;
-import kg.freelance.dto.response.PageResponse;
+import kg.freelance.dto.response.*;
 import kg.freelance.entity.*;
+import kg.freelance.repository.DisputeRepository;
 import kg.freelance.entity.enums.OrderStatus;
 import kg.freelance.entity.enums.ProfileVisibility;
+import kg.freelance.entity.enums.SubscriptionStatus;
 import kg.freelance.entity.enums.UserRole;
 import kg.freelance.exception.BadRequestException;
 import kg.freelance.exception.ResourceNotFoundException;
@@ -66,6 +65,12 @@ class AdminServiceImplTest {
 
     @Mock
     private OrderResponseRepository orderResponseRepository;
+
+    @Mock
+    private DisputeRepository disputeRepository;
+
+    @Mock
+    private kg.freelance.service.DisputeService disputeService;
 
     @InjectMocks
     private AdminServiceImpl adminService;
@@ -263,13 +268,17 @@ class AdminServiceImplTest {
         void shouldResolveDisputeInFavorOfClient() {
             // Given
             order.setStatus(OrderStatus.DISPUTED);
-            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+            Dispute dispute = Dispute.builder().id(10L).order(order).build();
+            when(disputeRepository.findByOrderId(1L)).thenReturn(Optional.of(dispute));
+            when(userRepository.findByRole(UserRole.ADMIN)).thenReturn(List.of(
+                    User.builder().id(99L).role(UserRole.ADMIN).build()
+            ));
 
             // When
             adminService.resolveDispute(1L, true, "Client was right");
 
             // Then
-            verify(orderRepository).save(argThat(o -> o.getStatus() == OrderStatus.CANCELLED));
+            verify(disputeService).resolveDispute(eq(10L), eq(99L), any());
         }
 
         @Test
@@ -277,28 +286,29 @@ class AdminServiceImplTest {
         void shouldResolveDisputeInFavorOfExecutor() {
             // Given
             order.setStatus(OrderStatus.DISPUTED);
-            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-            when(executorProfileRepository.findById(2L)).thenReturn(Optional.of(executorProfile));
+            Dispute dispute = Dispute.builder().id(10L).order(order).build();
+            when(disputeRepository.findByOrderId(1L)).thenReturn(Optional.of(dispute));
+            when(userRepository.findByRole(UserRole.ADMIN)).thenReturn(List.of(
+                    User.builder().id(99L).role(UserRole.ADMIN).build()
+            ));
 
             // When
             adminService.resolveDispute(1L, false, "Executor was right");
 
             // Then
-            verify(orderRepository).save(argThat(o -> o.getStatus() == OrderStatus.COMPLETED));
-            verify(executorProfileRepository).save(any(ExecutorProfile.class));
+            verify(disputeService).resolveDispute(eq(10L), eq(99L), any());
         }
 
         @Test
-        @DisplayName("Should throw exception when order is not in dispute")
+        @DisplayName("Should throw exception when no dispute found for order")
         void shouldThrowExceptionWhenOrderNotInDispute() {
             // Given
-            order.setStatus(OrderStatus.IN_PROGRESS);
-            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+            when(disputeRepository.findByOrderId(1L)).thenReturn(Optional.empty());
 
             // When/Then
             assertThatThrownBy(() -> adminService.resolveDispute(1L, true, "Resolution"))
                     .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Order is not in dispute");
+                    .hasMessageContaining("No dispute found");
         }
 
         @Test
@@ -489,6 +499,190 @@ class AdminServiceImplTest {
             // When/Then
             assertThatThrownBy(() -> adminService.approveReview(999L))
                     .isInstanceOf(ResourceNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("Overview Stats Tests")
+    class OverviewStatsTests {
+
+        @Test
+        @DisplayName("Should return overview stats using optimized queries")
+        void shouldReturnOverviewStats() {
+            when(userRepository.count()).thenReturn(100L);
+            when(userRepository.countByActiveTrue()).thenReturn(90L);
+            when(executorProfileRepository.count()).thenReturn(30L);
+            when(orderRepository.count()).thenReturn(50L);
+            when(reviewRepository.count()).thenReturn(20L);
+
+            when(userRepository.countByCreatedAtAfter(any())).thenReturn(5L);
+
+            when(orderRepository.countByStatus(OrderStatus.NEW)).thenReturn(10L);
+            when(orderRepository.countByStatus(OrderStatus.IN_PROGRESS)).thenReturn(8L);
+            when(orderRepository.countByStatus(OrderStatus.REVISION)).thenReturn(2L);
+            when(orderRepository.countByStatus(OrderStatus.COMPLETED)).thenReturn(25L);
+            when(orderRepository.countByStatus(OrderStatus.DISPUTED)).thenReturn(3L);
+            when(orderRepository.countByStatus(OrderStatus.CANCELLED)).thenReturn(4L);
+
+            when(orderRepository.sumAgreedPrice()).thenReturn(BigDecimal.valueOf(100000));
+            when(orderRepository.countWithAgreedPrice()).thenReturn(20L);
+
+            when(reviewRepository.countByIsModeratedFalse()).thenReturn(5L);
+            when(reviewRepository.calculateOverallAverageRating()).thenReturn(4.2);
+
+            when(orderRepository.countOrdersByCategory()).thenReturn(List.of(
+                    new Object[]{1L, "Web Dev", 15L},
+                    new Object[]{2L, "Mobile", 10L}
+            ));
+            when(categoryRepository.count()).thenReturn(5L);
+
+            AdminStatsResponse result = adminService.getOverviewStats();
+
+            assertThat(result.getTotalUsers()).isEqualTo(100L);
+            assertThat(result.getActiveUsers()).isEqualTo(90L);
+            assertThat(result.getExecutors()).isEqualTo(30L);
+            assertThat(result.getTotalOrders()).isEqualTo(50L);
+            assertThat(result.getNewOrders()).isEqualTo(10L);
+            assertThat(result.getCompletedOrders()).isEqualTo(25L);
+            assertThat(result.getTotalOrdersValue()).isEqualByComparingTo(BigDecimal.valueOf(100000));
+            assertThat(result.getAverageOrderValue()).isEqualByComparingTo(BigDecimal.valueOf(5000));
+            assertThat(result.getPendingModeration()).isEqualTo(5L);
+            assertThat(result.getAverageRating()).isEqualTo(4.2);
+            assertThat(result.getTotalCategories()).isEqualTo(5L);
+            assertThat(result.getTopCategories()).hasSize(2);
+            assertThat(result.getTopCategories().get(0).getCategoryName()).isEqualTo("Web Dev");
+
+            // Verify no findAll() calls
+            verify(userRepository, never()).findAll();
+            verify(orderRepository, never()).findAll();
+            verify(reviewRepository, never()).findAll();
+        }
+
+        @Test
+        @DisplayName("Should handle null average rating")
+        void shouldHandleNullAverageRating() {
+            when(userRepository.count()).thenReturn(0L);
+            when(userRepository.countByActiveTrue()).thenReturn(0L);
+            when(executorProfileRepository.count()).thenReturn(0L);
+            when(orderRepository.count()).thenReturn(0L);
+            when(reviewRepository.count()).thenReturn(0L);
+            when(userRepository.countByCreatedAtAfter(any())).thenReturn(0L);
+            when(orderRepository.countByStatus(any())).thenReturn(0L);
+            when(orderRepository.sumAgreedPrice()).thenReturn(BigDecimal.ZERO);
+            when(orderRepository.countWithAgreedPrice()).thenReturn(0L);
+            when(reviewRepository.countByIsModeratedFalse()).thenReturn(0L);
+            when(reviewRepository.calculateOverallAverageRating()).thenReturn(null);
+            when(orderRepository.countOrdersByCategory()).thenReturn(List.of());
+            when(categoryRepository.count()).thenReturn(0L);
+
+            AdminStatsResponse result = adminService.getOverviewStats();
+
+            assertThat(result.getAverageRating()).isEqualTo(0.0);
+            assertThat(result.getAverageOrderValue()).isEqualByComparingTo(BigDecimal.ZERO);
+        }
+    }
+
+    @Nested
+    @DisplayName("Analytics Tests")
+    class AnalyticsTests {
+
+        @Test
+        @DisplayName("Should return analytics using optimized queries")
+        void shouldReturnAnalytics() {
+            SubscriptionSettings settings = SubscriptionSettings.builder()
+                    .id(1L).price(BigDecimal.valueOf(500)).trialDays(7).announcementEnabled(false).build();
+            when(subscriptionSettingsRepository.getSettings()).thenReturn(settings);
+
+            when(userRepository.countByCreatedAtBetween(any(), any())).thenReturn(2L);
+            when(orderRepository.countByCreatedAtBetween(any(), any())).thenReturn(3L);
+            when(orderRepository.countCompletedBetween(any(), any())).thenReturn(1L);
+            when(userSubscriptionRepository.countByStatusAndCreatedAtBetween(eq(SubscriptionStatus.ACTIVE), any(), any())).thenReturn(1L);
+
+            when(userSubscriptionRepository.count()).thenReturn(10L);
+            when(userSubscriptionRepository.countCurrentlyActive(any())).thenReturn(5L);
+            when(userSubscriptionRepository.countCurrentlyTrial(any())).thenReturn(2L);
+            when(userSubscriptionRepository.countExpired(any())).thenReturn(3L);
+            when(userSubscriptionRepository.countByStatus(SubscriptionStatus.ACTIVE)).thenReturn(8L);
+
+            when(userRepository.count()).thenReturn(100L);
+            when(executorProfileRepository.count()).thenReturn(30L);
+            when(userRepository.countVerifiedExecutors()).thenReturn(20L);
+            when(orderRepository.count()).thenReturn(50L);
+            when(orderRepository.countByStatus(OrderStatus.COMPLETED)).thenReturn(25L);
+            when(orderResponseRepository.count()).thenReturn(200L);
+            when(orderResponseRepository.countSelected()).thenReturn(40L);
+
+            AnalyticsResponse result = adminService.getAnalytics();
+
+            assertThat(result.getDailyStats()).hasSize(30);
+            assertThat(result.getWeeklyStats()).hasSize(12);
+            assertThat(result.getMonthlyStats()).hasSize(12);
+
+            assertThat(result.getSubscriptions().getTotalSubscriptions()).isEqualTo(10L);
+            assertThat(result.getSubscriptions().getActiveSubscriptions()).isEqualTo(5L);
+            assertThat(result.getSubscriptions().getTotalRevenue()).isEqualByComparingTo(BigDecimal.valueOf(4000));
+
+            assertThat(result.getConversions().getRegistrationToExecutorRate()).isEqualTo(30.0);
+            assertThat(result.getConversions().getOrderCompletionRate()).isEqualTo(50.0);
+            assertThat(result.getConversions().getResponseToSelectionRate()).isEqualTo(20.0);
+
+            // Verify no findAll() calls — all queries are optimized
+            verify(userRepository, never()).findAll();
+            verify(orderRepository, never()).findAll();
+            verify(userSubscriptionRepository, never()).findAll();
+            verify(orderResponseRepository, never()).findAll();
+        }
+    }
+
+    @Nested
+    @DisplayName("CSV Export Tests")
+    class CsvExportTests {
+
+        @Test
+        @DisplayName("Should export analytics as CSV")
+        void shouldExportAnalyticsAsCsv() {
+            // Mock for getAnalytics()
+            SubscriptionSettings settings = SubscriptionSettings.builder()
+                    .id(1L).price(BigDecimal.valueOf(500)).trialDays(7).announcementEnabled(false).build();
+            when(subscriptionSettingsRepository.getSettings()).thenReturn(settings);
+            when(userRepository.countByCreatedAtBetween(any(), any())).thenReturn(0L);
+            when(orderRepository.countByCreatedAtBetween(any(), any())).thenReturn(0L);
+            when(orderRepository.countCompletedBetween(any(), any())).thenReturn(0L);
+            when(userSubscriptionRepository.countByStatusAndCreatedAtBetween(any(), any(), any())).thenReturn(0L);
+            when(userSubscriptionRepository.count()).thenReturn(0L);
+            when(userSubscriptionRepository.countCurrentlyActive(any())).thenReturn(0L);
+            when(userSubscriptionRepository.countCurrentlyTrial(any())).thenReturn(0L);
+            when(userSubscriptionRepository.countExpired(any())).thenReturn(0L);
+            when(userSubscriptionRepository.countByStatus(any())).thenReturn(0L);
+            when(userRepository.count()).thenReturn(10L);
+            when(executorProfileRepository.count()).thenReturn(3L);
+            when(userRepository.countVerifiedExecutors()).thenReturn(2L);
+            when(orderRepository.count()).thenReturn(5L);
+            when(orderRepository.countByStatus(any())).thenReturn(0L);
+            when(orderResponseRepository.count()).thenReturn(0L);
+            when(orderResponseRepository.countSelected()).thenReturn(0L);
+
+            // Mock for getOverviewStats()
+            when(userRepository.countByActiveTrue()).thenReturn(9L);
+            when(userRepository.countByCreatedAtAfter(any())).thenReturn(1L);
+            when(orderRepository.sumAgreedPrice()).thenReturn(BigDecimal.valueOf(10000));
+            when(orderRepository.countWithAgreedPrice()).thenReturn(3L);
+            when(reviewRepository.count()).thenReturn(2L);
+            when(reviewRepository.countByIsModeratedFalse()).thenReturn(1L);
+            when(reviewRepository.calculateOverallAverageRating()).thenReturn(4.5);
+            when(orderRepository.countOrdersByCategory()).thenReturn(List.of());
+            when(categoryRepository.count()).thenReturn(3L);
+
+            byte[] csv = adminService.exportAnalyticsCsv();
+
+            String csvString = new String(csv);
+            assertThat(csvString).contains("Аналитика платформы FreelanceKG");
+            assertThat(csvString).contains("ОБЗОР");
+            assertThat(csvString).contains("ЕЖЕДНЕВНАЯ СТАТИСТИКА");
+            assertThat(csvString).contains("ЕЖЕНЕДЕЛЬНАЯ СТАТИСТИКА");
+            assertThat(csvString).contains("ЕЖЕМЕСЯЧНАЯ СТАТИСТИКА");
+            assertThat(csvString).contains("ПОДПИСКИ");
+            assertThat(csvString).contains("КОНВЕРСИИ");
         }
     }
 }

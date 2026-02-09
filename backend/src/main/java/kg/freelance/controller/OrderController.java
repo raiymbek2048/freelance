@@ -149,12 +149,12 @@ public class OrderController {
     @PostMapping("/{id}/dispute")
     @Operation(summary = "Open dispute", description = "Open a dispute for the order")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<Void> openDispute(
+    public ResponseEntity<DisputeResponse> openDispute(
             @AuthenticationPrincipal UserPrincipal user,
             @PathVariable Long id,
-            @RequestParam(required = false) String reason) {
+            @Valid @RequestBody OpenDisputeRequest request) {
 
-        orderService.openDispute(user.getId(), id, reason);
+        orderService.openDispute(user.getId(), id, request.getReason());
         return ResponseEntity.ok().build();
     }
 

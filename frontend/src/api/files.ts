@@ -16,6 +16,19 @@ export const filesApi = {
     return response.data;
   },
 
+  // Upload dispute evidence (images + PDF)
+  uploadEvidence: async (file: File): Promise<FileUploadResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await api.post('/files/upload/evidence', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
   // Upload verification document
   uploadVerification: async (file: File, type: 'passport' | 'selfie'): Promise<FileUploadResponse> => {
     const formData = new FormData();

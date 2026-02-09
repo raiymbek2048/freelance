@@ -8,7 +8,9 @@ import kg.freelance.exception.BadRequestException;
 import kg.freelance.exception.ForbiddenException;
 import kg.freelance.exception.ResourceNotFoundException;
 import kg.freelance.repository.*;
+import kg.freelance.dto.request.OpenDisputeRequest;
 import kg.freelance.service.ChatService;
+import kg.freelance.service.DisputeService;
 import kg.freelance.service.EmailService;
 import kg.freelance.service.ExecutorVerificationService;
 import kg.freelance.service.OrderService;
@@ -41,6 +43,7 @@ public class OrderServiceImpl implements OrderService {
     private final EmailService emailService;
     private final ChatService chatService;
     private final SubscriptionService subscriptionService;
+    private final DisputeService disputeService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
@@ -64,8 +67,12 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
 
-        // Increment view count
-        orderRepository.incrementViewCount(orderId);
+        // Increment view count only for non-owners
+        boolean isOwner = userId != null && userId.equals(order.getClient().getId());
+        boolean isExecutor = userId != null && order.getExecutor() != null && userId.equals(order.getExecutor().getId());
+        if (!isOwner && !isExecutor) {
+            orderRepository.incrementViewCount(orderId);
+        }
 
         return mapToDetailResponse(order, userId);
     }
@@ -350,120 +357,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public void openDispute(Long userId, Long orderId, String reason) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
-
-        boolean isClient = order.getClient().getId().equals(userId);
-        boolean isExecutor = order.getExecutor() != null && order.getExecutor().getId().equals(userId);
-
-        if (!isClient && !isExecutor) {
-            throw new ForbiddenException("Only order participants can open dispute");
-        }
-
-        if (order.getStatus() != OrderStatus.IN_PROGRESS && order.getStatus() != OrderStatus.ON_REVIEW) {
-            throw new BadRequestException("Cannot open dispute in current status");
-        }
-
-        order.setStatus(OrderStatus.DISPUTED);
-        orderRepository.save(order);
-
-        // Update executor disputed orders count
-        if (order.getExecutor() != null) {
-            ExecutorProfile profile = executorProfileRepository.findById(order.getExecutor().getId()).orElse(null);
-            if (profile != null) {
-                profile.setDisputedOrders(profile.getDisputedOrders() + 1);
-                executorProfileRepository.save(profile);
-            }
-        }
-
-        // Send notification to the other party
-        if (order.getExecutor() != null) {
-            User sender = isClient ? order.getClient() : order.getExecutor();
-            User recipient = isClient ? order.getExecutor() : order.getClient();
-            String initiatorRole = isClient ? "Заказчик" : "Исполнитель";
-
-            ChatRoom chatRoom = chatRoomRepository.findByOrderIdAndExecutorId(orderId, order.getExecutor().getId())
-                    .orElse(null);
-
-            if (chatRoom != null) {
-                String messageText = initiatorRole + " открыл спор по заказу \"" + order.getTitle() + "\".";
-                if (reason != null && !reason.isBlank()) {
-                    messageText += "\n\nПричина: " + reason;
-                }
-                messageText += "\n\nМодератор рассмотрит ситуацию и примет решение.";
-
-                Message systemMessage = Message.builder()
-                        .chatRoom(chatRoom)
-                        .sender(sender)
-                        .content(messageText)
-                        .isRead(false)
-                        .build();
-                systemMessage = messageRepository.save(systemMessage);
-
-                chatRoom.setLastMessageAt(LocalDateTime.now());
-                chatRoomRepository.save(chatRoom);
-
-                WsMessage wsMessage = WsMessage.builder()
-                        .id(systemMessage.getId())
-                        .chatRoomId(chatRoom.getId())
-                        .senderId(sender.getId())
-                        .senderName(sender.getFullName())
-                        .senderAvatarUrl(sender.getAvatarUrl())
-                        .content(messageText)
-                        .createdAt(systemMessage.getCreatedAt())
-                        .type(WsMessage.MessageType.SYSTEM)
-                        .build();
-
-                messagingTemplate.convertAndSendToUser(
-                        recipient.getEmail(),
-                        "/queue/messages",
-                        wsMessage
-                );
-            }
-        }
-
-        // Notify all admins about the dispute
-        notifyAdminsAboutDispute(order, reason, isClient ? "заказчиком" : "исполнителем");
-
-        // Send email notifications
-        User sender = isClient ? order.getClient() : order.getExecutor();
-        User recipient = isClient ? order.getExecutor() : order.getClient();
-        emailService.sendDisputeOpened(recipient, order, reason);
-        emailService.sendDisputeOpened(sender, order, reason);
-
-        // Email admins
-        List<User> admins = userRepository.findByRole(kg.freelance.entity.enums.UserRole.ADMIN);
-        for (User admin : admins) {
-            emailService.sendDisputeOpened(admin, order, reason);
-        }
-    }
-
-    private void notifyAdminsAboutDispute(Order order, String reason, String initiatedBy) {
-        List<User> admins = userRepository.findByRole(kg.freelance.entity.enums.UserRole.ADMIN);
-
-        for (User admin : admins) {
-            WsMessage notification = WsMessage.builder()
-                    .id(System.currentTimeMillis())
-                    .chatRoomId(0L)
-                    .senderId(0L)
-                    .senderName("Система")
-                    .content(String.format(
-                            "Открыт новый спор по заказу #%d \"%s\"\nИнициирован: %s\n%s",
-                            order.getId(),
-                            order.getTitle(),
-                            initiatedBy,
-                            reason != null && !reason.isBlank() ? "Причина: " + reason : ""
-                    ))
-                    .createdAt(LocalDateTime.now())
-                    .type(WsMessage.MessageType.ADMIN_NOTIFICATION)
-                    .build();
-
-            messagingTemplate.convertAndSendToUser(
-                    admin.getEmail(),
-                    "/queue/admin-notifications",
-                    notification
-            );
-        }
+        OpenDisputeRequest request = new OpenDisputeRequest(reason != null ? reason : "");
+        disputeService.openDispute(userId, orderId, request);
     }
 
     @Override

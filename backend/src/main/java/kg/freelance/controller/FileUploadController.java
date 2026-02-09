@@ -96,6 +96,35 @@ public class FileUploadController {
         return ResponseEntity.ok(Map.of("url", url));
     }
 
+    @PostMapping("/upload/evidence")
+    @Operation(summary = "Upload dispute evidence", description = "Upload evidence file for a dispute (images + PDF)")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<Map<String, String>> uploadEvidence(
+            @AuthenticationPrincipal UserPrincipal user,
+            @RequestParam("file") MultipartFile file) throws IOException {
+
+        if (file.isEmpty()) {
+            throw new BadRequestException("File is empty");
+        }
+
+        if (file.getSize() > MAX_SIZE) {
+            throw new BadRequestException("File size exceeds maximum allowed (10MB)");
+        }
+
+        Set<String> evidenceTypes = Set.of(
+                "image/jpeg", "image/png", "image/webp", "application/pdf"
+        );
+        String contentType = file.getContentType();
+        if (contentType == null || !evidenceTypes.contains(contentType)) {
+            throw new BadRequestException("Invalid file type. Allowed: JPEG, PNG, WebP, PDF");
+        }
+
+        String uploadFolder = "evidence/" + user.getId();
+        String url = s3Service.uploadFile(file, uploadFolder);
+
+        return ResponseEntity.ok(Map.of("url", url));
+    }
+
     @GetMapping("/{folder}/{subfolder}/{filename}")
     @Operation(summary = "Get file", description = "Get a file from local storage")
     public ResponseEntity<Resource> getFile(

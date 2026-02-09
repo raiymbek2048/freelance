@@ -90,7 +90,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailExecutor")
-    public void sendDisputeOpened(User recipient, Order order, String reason) {
+    public void sendDisputeOpened(String recipientEmail, String recipientName, String orderTitle, Long orderId, String reason) {
         String subject = "Открыт спор по заказу";
         String reasonText = reason != null && !reason.isEmpty()
             ? "Причина: " + reason
@@ -98,11 +98,39 @@ public class EmailServiceImpl implements EmailService {
         String message = String.format(
             "%s, по заказу \"%s\" был открыт спор. %s " +
             "Администрация рассмотрит ситуацию и примет решение.",
-            recipient.getFullName(), order.getTitle(), reasonText
+            recipientName, orderTitle, reasonText
         );
-        String buttonUrl = frontendUrl + "/orders/" + order.getId();
+        String buttonUrl = frontendUrl + "/orders/" + orderId;
 
-        sendEmail(recipient.getEmail(), subject, message, "Подробнее", buttonUrl);
+        sendEmail(recipientEmail, subject, message, "Подробнее", buttonUrl);
+    }
+
+    @Override
+    @Async("emailExecutor")
+    public void sendDisputeResolved(String recipientEmail, String recipientName, String orderTitle, Long orderId, String resolution, String notes) {
+        String subject = "Спор разрешён";
+        String notesText = notes != null && !notes.isEmpty() ? "\nКомментарий: " + notes : "";
+        String message = String.format(
+            "%s, спор по заказу \"%s\" был разрешён %s.%s",
+            recipientName, orderTitle, resolution, notesText
+        );
+        String buttonUrl = frontendUrl + "/orders/" + orderId + "/dispute";
+
+        sendEmail(recipientEmail, subject, message, "Подробнее", buttonUrl);
+    }
+
+    @Override
+    @Async("emailExecutor")
+    public void sendDisputeUnderReview(String recipientEmail, String recipientName, String orderTitle, Long orderId) {
+        String subject = "Спор принят на рассмотрение";
+        String message = String.format(
+            "%s, спор по заказу \"%s\" принят модератором на рассмотрение. " +
+            "Вы получите уведомление, когда решение будет принято.",
+            recipientName, orderTitle
+        );
+        String buttonUrl = frontendUrl + "/orders/" + orderId + "/dispute";
+
+        sendEmail(recipientEmail, subject, message, "Подробнее", buttonUrl);
     }
 
     @Override

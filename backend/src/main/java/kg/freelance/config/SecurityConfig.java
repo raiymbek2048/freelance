@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/files/verifications/**").permitAll()
                         .requestMatchers("/api/v1/files/chat/**").permitAll()
                         .requestMatchers("/api/v1/files/general/**").permitAll()
+                        .requestMatchers("/api/v1/files/evidence/**").permitAll()
 
                         // Public endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()

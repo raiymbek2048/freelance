@@ -5,6 +5,10 @@ import kg.freelance.entity.enums.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,4 +26,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByRole(UserRole role);
 
     Optional<User> findByGoogleId(String googleId);
+
+    // Analytics queries
+    long countByActiveTrue();
+
+    long countByCreatedAtAfter(LocalDateTime after);
+
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.executorVerified = true")
+    long countVerifiedExecutors();
 }

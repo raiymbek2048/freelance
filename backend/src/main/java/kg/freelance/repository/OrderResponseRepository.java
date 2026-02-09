@@ -4,6 +4,7 @@ import kg.freelance.entity.OrderResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,4 +22,8 @@ public interface OrderResponseRepository extends JpaRepository<OrderResponse, Lo
     boolean existsByOrderIdAndExecutorId(Long orderId, Long executorId);
 
     long countByOrderId(Long orderId);
+
+    // Analytics queries
+    @Query("SELECT COUNT(r) FROM OrderResponse r WHERE r.isSelected = true")
+    long countSelected();
 }

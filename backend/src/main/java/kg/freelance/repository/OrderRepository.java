@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -55,4 +56,21 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Modifying
     @Query("UPDATE Order o SET o.responseCount = o.responseCount + 1 WHERE o.id = :orderId")
     void incrementResponseCount(@Param("orderId") Long orderId);
+
+    // Analytics queries
+    long countByStatus(@Param("status") OrderStatus status);
+
+    @Query("SELECT COALESCE(SUM(o.agreedPrice), 0) FROM Order o WHERE o.agreedPrice IS NOT NULL")
+    BigDecimal sumAgreedPrice();
+
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.agreedPrice IS NOT NULL")
+    long countWithAgreedPrice();
+
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.completedAt BETWEEN :start AND :end")
+    long countCompletedBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT o.category.id, o.category.name, COUNT(o) FROM Order o GROUP BY o.category.id, o.category.name ORDER BY COUNT(o) DESC")
+    List<Object[]> countOrdersByCategory();
 }

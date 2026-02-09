@@ -265,10 +265,11 @@ class OrderControllerTest {
         @Test
         @DisplayName("POST /api/v1/orders/{id}/dispute")
         void shouldOpenDispute() throws Exception {
-            doNothing().when(orderService).openDispute(1L, 1L, "Issue");
+            doNothing().when(orderService).openDispute(eq(1L), eq(1L), anyString());
 
             mockMvc.perform(post("/api/v1/orders/1/dispute")
-                            .param("reason", "Issue"))
+                            .contentType("application/json")
+                            .content("{\"reason\":\"Issue with the work delivered\"}"))
                     .andExpect(status().isOk());
         }
 

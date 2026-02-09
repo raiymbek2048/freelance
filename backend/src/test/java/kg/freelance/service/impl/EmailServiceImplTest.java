@@ -119,7 +119,7 @@ class EmailServiceImplTest {
         @DisplayName("Should not send email when disabled - dispute opened")
         void shouldNotSendEmailWhenDisabledDisputeOpened() {
             // When
-            emailService.sendDisputeOpened(user, order, "Issue");
+            emailService.sendDisputeOpened(user.getEmail(), user.getFullName(), order.getTitle(), order.getId(), "Issue");
 
             // Then
             verify(mailSender, never()).send(any(MimeMessage.class));
@@ -251,7 +251,7 @@ class EmailServiceImplTest {
         @DisplayName("Should send dispute opened email")
         void shouldSendDisputeOpenedEmail() {
             // When
-            emailService.sendDisputeOpened(user, order, "Issue with quality");
+            emailService.sendDisputeOpened(user.getEmail(), user.getFullName(), order.getTitle(), order.getId(), "Issue with quality");
 
             // Then
             verify(mailSender).send(mimeMessage);
@@ -261,7 +261,7 @@ class EmailServiceImplTest {
         @DisplayName("Should send dispute opened email with empty reason")
         void shouldSendDisputeOpenedEmailWithEmptyReason() {
             // When
-            emailService.sendDisputeOpened(user, order, "");
+            emailService.sendDisputeOpened(user.getEmail(), user.getFullName(), order.getTitle(), order.getId(), "");
 
             // Then
             verify(mailSender).send(mimeMessage);

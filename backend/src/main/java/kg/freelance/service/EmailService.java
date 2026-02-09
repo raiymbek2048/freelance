@@ -13,7 +13,11 @@ public interface EmailService {
 
     void sendRevisionRequested(User executor, Order order, String reason);
 
-    void sendDisputeOpened(User recipient, Order order, String reason);
+    void sendDisputeOpened(String recipientEmail, String recipientName, String orderTitle, Long orderId, String reason);
+
+    void sendDisputeResolved(String recipientEmail, String recipientName, String orderTitle, Long orderId, String resolution, String notes);
+
+    void sendDisputeUnderReview(String recipientEmail, String recipientName, String orderTitle, Long orderId);
 
     void sendNewOrderResponse(User client, Order order, User executor);
 

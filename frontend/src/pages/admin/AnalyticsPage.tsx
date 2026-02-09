@@ -10,7 +10,23 @@ import {
   UserCheck,
   CheckCircle,
   Target,
+  Download,
 } from 'lucide-react';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  Legend,
+} from 'recharts';
 import { AdminLayout } from '@/components/layout';
 import { adminApi, type MonthlyStats } from '@/api/admin';
 
@@ -55,38 +71,6 @@ function StatCard({
   );
 }
 
-function SimpleBarChart({
-  data,
-  label,
-  color = 'bg-cyan-500',
-}: {
-  data: { label: string; value: number }[];
-  label: string;
-  color?: string;
-}) {
-  const maxValue = Math.max(...data.map((d) => d.value), 1);
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">{label}</h3>
-      <div className="space-y-3">
-        {data.map((item, index) => (
-          <div key={index} className="flex items-center gap-3">
-            <span className="w-16 text-xs text-gray-500 text-right">{item.label}</span>
-            <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
-              <div
-                className={`h-full ${color} rounded-full transition-all duration-500`}
-                style={{ width: `${(item.value / maxValue) * 100}%` }}
-              />
-            </div>
-            <span className="w-12 text-sm font-medium text-gray-700">{item.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ConversionCard({
   title,
   value,
@@ -118,13 +102,30 @@ function ConversionCard({
   );
 }
 
+const PIE_COLORS = ['#10b981', '#f59e0b', '#9ca3af'];
+
 export function AdminAnalyticsPage() {
   const [period, setPeriod] = useState<Period>('monthly');
+  const [exporting, setExporting] = useState(false);
 
   const { data: analytics, isLoading } = useQuery({
     queryKey: ['admin-analytics'],
     queryFn: () => adminApi.getAnalytics(),
   });
+
+  const { data: stats } = useQuery({
+    queryKey: ['admin-stats'],
+    queryFn: () => adminApi.getStats(),
+  });
+
+  const handleExportCsv = async () => {
+    setExporting(true);
+    try {
+      await adminApi.exportAnalyticsCsv();
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -160,6 +161,7 @@ export function AdminAnalyticsPage() {
         label: new Date(d.date).toLocaleDateString('ru', { day: 'numeric', month: 'short' }),
         users: d.newUsers,
         orders: d.newOrders,
+        completed: d.completedOrders,
         revenue: d.revenue,
       }));
     }
@@ -168,6 +170,7 @@ export function AdminAnalyticsPage() {
         label: new Date(d.weekStart).toLocaleDateString('ru', { day: 'numeric', month: 'short' }),
         users: d.newUsers,
         orders: d.newOrders,
+        completed: d.completedOrders,
         revenue: d.revenue,
       }));
     }
@@ -176,6 +179,7 @@ export function AdminAnalyticsPage() {
         label: `${d.monthName} ${d.year}`,
         users: d.newUsers,
         orders: d.newOrders,
+        completed: d.completedOrders,
         revenue: d.revenue,
       }));
     }
@@ -183,6 +187,21 @@ export function AdminAnalyticsPage() {
   };
 
   const chartData = getChartData();
+
+  // Pie chart data for subscription breakdown
+  const pieData = subscriptions
+    ? [
+        { name: 'Активные', value: subscriptions.activeSubscriptions },
+        { name: 'Триал', value: subscriptions.trialSubscriptions },
+        { name: 'Истекшие', value: subscriptions.expiredSubscriptions },
+      ].filter((d) => d.value > 0)
+    : [];
+
+  // Top categories data
+  const categoryData = stats?.topCategories?.map((cat) => ({
+    name: cat.categoryName.length > 15 ? cat.categoryName.slice(0, 15) + '...' : cat.categoryName,
+    orders: cat.orderCount,
+  })) || [];
 
   return (
     <AdminLayout>
@@ -193,6 +212,14 @@ export function AdminAnalyticsPage() {
             <p className="text-gray-500">Детальная статистика платформы</p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={handleExportCsv}
+              disabled={exporting}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              {exporting ? 'Экспорт...' : 'CSV'}
+            </button>
             <button
               onClick={() => setPeriod('daily')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -250,26 +277,127 @@ export function AdminAnalyticsPage() {
           />
         </div>
 
-        {/* Charts */}
+        {/* Charts — Users & Orders */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SimpleBarChart
-            data={chartData.map((d) => ({ label: d.label, value: d.users }))}
-            label="Новые пользователи"
-            color="bg-blue-500"
-          />
-          <SimpleBarChart
-            data={chartData.map((d) => ({ label: d.label, value: d.orders }))}
-            label="Новые заказы"
-            color="bg-green-500"
-          />
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Пользователи и заказы</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="users"
+                  name="Пользователи"
+                  stroke="#3b82f6"
+                  fillOpacity={1}
+                  fill="url(#colorUsers)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="orders"
+                  name="Заказы"
+                  stroke="#10b981"
+                  fillOpacity={1}
+                  fill="url(#colorOrders)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Revenue Chart */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Доход (сом)</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip formatter={(value) => [`${Number(value).toLocaleString()} сом`, 'Доход']} />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  name="Доход"
+                  stroke="#8b5cf6"
+                  fillOpacity={1}
+                  fill="url(#colorRevenue)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        {/* Revenue Chart */}
-        <SimpleBarChart
-          data={chartData.map((d) => ({ label: d.label, value: d.revenue }))}
-          label="Доход (сом)"
-          color="bg-purple-500"
-        />
+        {/* Subscriptions Pie + Top Categories Bar */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Subscription Distribution */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Распределение подписок</h3>
+            {pieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                  >
+                    {pieData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-gray-400">
+                Нет данных о подписках
+              </div>
+            )}
+          </div>
+
+          {/* Top Categories */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Топ категории по заказам</h3>
+            {categoryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={categoryData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis type="number" tick={{ fontSize: 12 }} />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="orders" name="Заказы" fill="#06b6d4" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-gray-400">
+                Нет данных о категориях
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Conversion Rates */}
         <div>

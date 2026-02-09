@@ -292,6 +292,18 @@ class AdminControllerTests {
             mockMvc.perform(get("/api/v1/admin/stats/analytics"))
                     .andExpect(status().isOk());
         }
+
+        @Test
+        @DisplayName("GET /api/v1/admin/stats/export/csv - should export CSV")
+        void shouldExportCsv() throws Exception {
+            byte[] csvData = "Header1,Header2\nVal1,Val2".getBytes();
+            when(adminService.exportAnalyticsCsv()).thenReturn(csvData);
+
+            mockMvc.perform(get("/api/v1/admin/stats/export/csv"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Content-Disposition", "attachment; filename=analytics.csv"))
+                    .andExpect(content().contentTypeCompatibleWith("text/csv"));
+        }
     }
 
     @Nested
