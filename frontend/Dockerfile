@@ -31,6 +31,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built assets
 COPY --from=build /app/dist /usr/share/nginx/html
+RUN chmod -R 644 /usr/share/nginx/html/* && find /usr/share/nginx/html -type d -exec chmod 755 {} \;
 
 # Expose ports
 EXPOSE 80 443
