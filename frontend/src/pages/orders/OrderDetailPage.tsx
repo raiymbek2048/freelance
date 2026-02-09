@@ -443,7 +443,7 @@ export function OrderDetailPage() {
                   : order.budgetMin && order.budgetMax
                   ? `${order.budgetMin.toLocaleString()} - ${order.budgetMax.toLocaleString()} сом`
                   : order.budgetMax
-                  ? `до ${order.budgetMax.toLocaleString()} сом`
+                  ? `${order.budgetMax.toLocaleString()} сом`
                   : 'По договорённости'}
               </p>
               {order.deadline && (

@@ -179,7 +179,7 @@ export function AdminOrdersPage() {
                       {order.agreedPrice
                         ? `${order.agreedPrice.toLocaleString()} сом`
                         : order.budgetMax
-                          ? `до ${order.budgetMax.toLocaleString()} сом`
+                          ? `${order.budgetMax.toLocaleString()} сом`
                           : '-'}
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-500">
@@ -288,7 +288,7 @@ export function AdminOrdersPage() {
                   {selectedOrder.budgetMin && selectedOrder.budgetMax
                     ? `${selectedOrder.budgetMin.toLocaleString()} - ${selectedOrder.budgetMax.toLocaleString()} сом`
                     : selectedOrder.budgetMax
-                      ? `до ${selectedOrder.budgetMax.toLocaleString()} сом`
+                      ? `${selectedOrder.budgetMax.toLocaleString()} сом`
                       : '-'}
                 </p>
               </div>

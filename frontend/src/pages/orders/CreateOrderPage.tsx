@@ -169,6 +169,9 @@ export function CreateOrderPage() {
               {(errors.deadlineDate || errors.deadlineTime) && (
                 <p className="text-red-500 text-xs mt-1">Укажите дату и время</p>
               )}
+              <p className="text-xs text-amber-500 mt-1">
+                После этой даты задание станет недоступно для исполнителей и не будет отображаться в поиске.
+              </p>
             </div>
 
             {/* Budget */}

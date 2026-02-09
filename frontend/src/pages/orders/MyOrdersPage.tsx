@@ -80,7 +80,7 @@ function ClientOrderCard({ order }: { order: OrderListItem }) {
       return `от ${order.budgetMin.toLocaleString()} сом`;
     }
     if (order.budgetMax) {
-      return `до ${order.budgetMax.toLocaleString()} сом`;
+      return `${order.budgetMax.toLocaleString()} сом`;
     }
     return 'Договорная';
   };
@@ -88,7 +88,7 @@ function ClientOrderCard({ order }: { order: OrderListItem }) {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <Badge variant={statusColors[order.status]}>
@@ -103,7 +103,7 @@ function ClientOrderCard({ order }: { order: OrderListItem }) {
               {order.title}
             </h3>
             <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-500">
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 text-green-600 font-semibold text-base">
                 <Wallet className="w-4 h-4" />
                 {formatBudget()}
               </span>
@@ -250,14 +250,14 @@ function ExecutorOrderCard({ order }: { order: OrderListItem }) {
       return `от ${order.budgetMin.toLocaleString()} сом`;
     }
     if (order.budgetMax) {
-      return `до ${order.budgetMax.toLocaleString()} сом`;
+      return `${order.budgetMax.toLocaleString()} сом`;
     }
     return 'Договорная';
   };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
             <Badge variant={statusColors[order.status]}>{statusLabels[order.status]}</Badge>
@@ -271,7 +271,7 @@ function ExecutorOrderCard({ order }: { order: OrderListItem }) {
           </h3>
           <p className="text-sm text-gray-500 mt-1">Заказчик: {order.clientName}</p>
           <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-500">
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 text-green-600 font-semibold text-base">
               <Wallet className="w-4 h-4" />
               {formatBudget()}
             </span>

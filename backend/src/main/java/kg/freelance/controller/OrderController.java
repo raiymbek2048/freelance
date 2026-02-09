@@ -42,9 +42,9 @@ public class OrderController {
             @RequestParam(defaultValue = "20") int size) {
 
         Sort sorting = switch (sort) {
-            case "budget" -> Sort.by(Sort.Direction.DESC, "budgetMax");
+            case "budget" -> Sort.by(Sort.Direction.DESC, "budget_max");
             case "deadline" -> Sort.by(Sort.Direction.ASC, "deadline");
-            default -> Sort.by(Sort.Direction.DESC, "createdAt");
+            default -> Sort.by(Sort.Direction.DESC, "created_at");
         };
 
         Long userId = user != null ? user.getId() : null;

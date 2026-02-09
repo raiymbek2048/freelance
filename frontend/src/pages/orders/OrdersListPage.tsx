@@ -232,8 +232,8 @@ export function OrdersListPage() {
                         </span>
                       )}
                       {order.budgetMax && (
-                        <span className="text-xs text-green-600 font-medium">
-                          до {order.budgetMax.toLocaleString()} сом
+                        <span className="text-sm text-green-600 font-semibold self-center">
+                          {order.budgetMax.toLocaleString()} сом
                         </span>
                       )}
                       {isExpanded ? (

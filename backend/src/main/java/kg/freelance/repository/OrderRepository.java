@@ -17,18 +17,29 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    @Query("""
-            SELECT o FROM Order o
-            WHERE o.isPublic = true
-            AND o.status = kg.freelance.entity.enums.OrderStatus.NEW
+    @Query(value = """
+            SELECT * FROM orders o
+            WHERE o.is_public = true
+            AND o.status = 'NEW'
             AND (o.deadline IS NULL OR o.deadline >= CURRENT_DATE)
-            AND (:categoryId IS NULL OR o.category.id = :categoryId)
-            AND (:budgetMin IS NULL OR o.budgetMax >= :budgetMin)
-            AND (:budgetMax IS NULL OR o.budgetMin <= :budgetMax)
-            AND (:search IS NULL OR o.title LIKE %:search% OR o.description LIKE %:search%)
-            AND (:location IS NULL OR o.location LIKE %:location%)
-            ORDER BY o.createdAt DESC
-            """)
+            AND (CAST(:categoryId AS BIGINT) IS NULL OR o.category_id = :categoryId)
+            AND (CAST(:budgetMin AS NUMERIC) IS NULL OR o.budget_max >= :budgetMin)
+            AND (CAST(:budgetMax AS NUMERIC) IS NULL OR o.budget_min <= :budgetMax)
+            AND (:search IS NULL OR to_tsvector('russian', coalesce(o.title, '')) @@ plainto_tsquery('russian', :search))
+            AND (:location IS NULL OR o.location ILIKE '%' || :location || '%')
+            """,
+            countQuery = """
+            SELECT COUNT(*) FROM orders o
+            WHERE o.is_public = true
+            AND o.status = 'NEW'
+            AND (o.deadline IS NULL OR o.deadline >= CURRENT_DATE)
+            AND (CAST(:categoryId AS BIGINT) IS NULL OR o.category_id = :categoryId)
+            AND (CAST(:budgetMin AS NUMERIC) IS NULL OR o.budget_max >= :budgetMin)
+            AND (CAST(:budgetMax AS NUMERIC) IS NULL OR o.budget_min <= :budgetMax)
+            AND (:search IS NULL OR to_tsvector('russian', coalesce(o.title, '')) @@ plainto_tsquery('russian', :search))
+            AND (:location IS NULL OR o.location ILIKE '%' || :location || '%')
+            """,
+            nativeQuery = true)
     Page<Order> findPublicOrders(
             @Param("categoryId") Long categoryId,
             @Param("budgetMin") BigDecimal budgetMin,

@@ -83,6 +83,12 @@ yarn-error.log*
 .pub/
 /build/
 
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+
 # Coverage
 coverage/
 *.lcov
