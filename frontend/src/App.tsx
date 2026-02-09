@@ -19,6 +19,9 @@ import { ProfilePage } from '@/pages/ProfilePage';
 import { VerificationPage } from '@/pages/VerificationPage';
 import { VacanciesPage } from '@/pages/VacanciesPage';
 import { AdsPage } from '@/pages/AdsPage';
+import { HelpPage } from '@/pages/HelpPage';
+import { TermsPage } from '@/pages/TermsPage';
+import { PrivacyPage } from '@/pages/PrivacyPage';
 import { DisputeDetailPage } from '@/pages/orders/DisputeDetailPage';
 import {
   AdminDashboardPage,
@@ -103,6 +106,9 @@ function AppContent() {
       <Route path="/executors/:id" element={<ExecutorDetailPage />} />
       <Route path="/vacancies" element={<VacanciesPage />} />
       <Route path="/ads" element={<AdsPage />} />
+      <Route path="/help" element={<HelpPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
 
       {/* Protected routes */}
       <Route

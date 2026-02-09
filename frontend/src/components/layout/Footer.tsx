@@ -24,7 +24,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link to="/orders" className="text-gray-600 hover:text-gray-900">
-                  Заказы
+                  Задания
                 </Link>
               </li>
               <li>
@@ -33,8 +33,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/categories" className="text-gray-600 hover:text-gray-900">
-                  Категории
+                <Link to="/vacancies" className="text-gray-600 hover:text-gray-900">
+                  Вакансии
                 </Link>
               </li>
             </ul>
