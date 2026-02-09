@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /verification
+Disallow: /chats
+Disallow: /my-orders
+Disallow: /oauth/callback
+Disallow: /payment/
+
+Sitemap: https://freelance.kg/sitemap.xml
