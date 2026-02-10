@@ -1,8 +1,9 @@
 package kg.freelance.config;
 
+import kg.freelance.security.RateLimitFilter;
 import kg.freelance.security.jwt.JwtAuthenticationEntryPoint;
 import kg.freelance.security.jwt.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,11 +33,17 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final JwtAuthenticationEntryPoint jwtEntryPoint;
+    private final RateLimitFilter rateLimitFilter;
+
+    @Value("${app.cors.allowed-origins:http://localhost:5173}")
+    private String allowedOrigins;
 
     public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthFilter,
-                          JwtAuthenticationEntryPoint jwtEntryPoint) {
+                          JwtAuthenticationEntryPoint jwtEntryPoint,
+                          RateLimitFilter rateLimitFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.jwtEntryPoint = jwtEntryPoint;
+        this.rateLimitFilter = rateLimitFilter;
     }
 
     @Bean
@@ -77,17 +84,18 @@ public class SecurityConfig {
                         // WebSocket
                         .requestMatchers("/ws/**").permitAll()
 
-                        // Swagger/OpenAPI
+                        // Swagger/OpenAPI — admin only
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**"
-                        ).permitAll()
+                        ).hasRole("ADMIN")
 
-                        // Actuator (health checks)
-                        .requestMatchers("/actuator/**").permitAll()
+                        // Actuator — only health is public, rest requires admin
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
 
                         // Admin endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
@@ -95,6 +103,7 @@ public class SecurityConfig {
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
@@ -102,7 +111,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        configuration.setAllowedOriginPatterns(origins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

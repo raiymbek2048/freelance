@@ -30,6 +30,15 @@ app:
   mail:
     from: ${MAIL_FROM:noreply@freelance.kg}
     enabled: ${MAIL_ENABLED:true}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://freelance.kg}
+
+rate-limit:
+  auth:
+    login: 5
+    register: 3
+    refresh: 10
+  general: 100
 
 jwt:
   secret: ${JWT_SECRET}
@@ -52,4 +61,4 @@ management:
         include: health,info
   endpoint:
     health:
-      show-details: always
+      show-details: never
