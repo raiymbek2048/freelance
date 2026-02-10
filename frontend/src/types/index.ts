@@ -325,6 +325,7 @@ export interface VerificationResponse {
 export interface VerificationSubmitRequest {
   passportUrl: string;
   selfieUrl: string;
+  categoryIds: number[];
 }
 
 export interface AdminVerificationResponse {

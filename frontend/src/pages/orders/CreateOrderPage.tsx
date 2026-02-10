@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import { Layout } from '@/components/layout';
 import { PageMeta } from '@/components/PageMeta';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
+import { categoriesApi } from '@/api/categories';
 
 const cities = [
   'Бишкек',
@@ -24,6 +25,7 @@ const cities = [
 const orderSchema = z.object({
   title: z.string().min(10, 'Минимум 10 символов').max(100, 'Максимум 100 символов'),
   description: z.string().min(20, 'Минимум 20 символов'),
+  categoryId: z.number().min(1, 'Выберите категорию'),
   budget: z.number().optional(),
   deadlineDate: z.string().min(1, 'Укажите дату'),
   deadlineTime: z.string().min(1, 'Укажите время'),
@@ -36,6 +38,11 @@ export function CreateOrderPage() {
   const navigate = useNavigate();
   const [locationEnabled, setLocationEnabled] = useState(true);
   const [selectedCity, setSelectedCity] = useState('Бишкек');
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: categoriesApi.getAll,
+  });
 
   const createMutation = useMutation({
     mutationFn: ordersApi.create,
@@ -51,6 +58,7 @@ export function CreateOrderPage() {
   } = useForm<OrderForm>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
+      categoryId: 0,
       deadlineDate: new Date().toISOString().split('T')[0],
       deadlineTime: '12:00',
       location: 'Бишкек, Кыргызстан',
@@ -63,7 +71,7 @@ export function CreateOrderPage() {
     createMutation.mutate({
       title: data.title,
       description: data.description,
-      categoryId: 1,
+      categoryId: data.categoryId,
       budgetMin: data.budget,
       budgetMax: data.budget,
       deadline,
@@ -80,6 +88,28 @@ export function CreateOrderPage() {
 
         <Card padding="lg">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Категория
+              </label>
+              <div className="relative">
+                <select
+                  {...register('categoryId', { valueAsNumber: true })}
+                  className="w-full appearance-none pl-3 pr-8 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
+                >
+                  <option value={0}>Выберите категорию</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+              {errors.categoryId && (
+                <p className="text-red-500 text-xs mt-1">{errors.categoryId.message}</p>
+              )}
+            </div>
+
             {/* Location */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

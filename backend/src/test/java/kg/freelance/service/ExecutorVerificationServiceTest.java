@@ -11,6 +11,8 @@ import kg.freelance.entity.enums.UserRole;
 import kg.freelance.entity.enums.VerificationStatus;
 import kg.freelance.exception.BadRequestException;
 import kg.freelance.exception.ResourceNotFoundException;
+import kg.freelance.entity.Category;
+import kg.freelance.repository.CategoryRepository;
 import kg.freelance.repository.ExecutorProfileRepository;
 import kg.freelance.repository.ExecutorVerificationRepository;
 import kg.freelance.repository.UserRepository;
@@ -44,6 +46,9 @@ class ExecutorVerificationServiceTest {
 
     @Mock
     private ExecutorProfileRepository executorProfileRepository;
+
+    @Mock
+    private CategoryRepository categoryRepository;
 
     @Mock
     private UserRepository userRepository;
@@ -186,6 +191,9 @@ class ExecutorVerificationServiceTest {
             VerificationSubmitRequest request = new VerificationSubmitRequest();
             request.setPassportUrl("https://example.com/passport.jpg");
             request.setSelfieUrl("https://example.com/selfie.jpg");
+            request.setCategoryIds(List.of(1L, 2L));
+
+            ExecutorProfile profile = ExecutorProfile.builder().user(user).availableForWork(true).build();
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(verificationRepository.findByUserId(1L)).thenReturn(Optional.empty());
@@ -194,6 +202,9 @@ class ExecutorVerificationServiceTest {
                 v.setSubmittedAt(LocalDateTime.now());
                 return v;
             });
+            when(executorProfileRepository.findById(1L)).thenReturn(Optional.empty());
+            when(executorProfileRepository.save(any(ExecutorProfile.class))).thenReturn(profile);
+            when(categoryRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of());
 
             // When
             VerificationResponse result = verificationService.submitVerification(1L, request);
@@ -242,10 +253,16 @@ class ExecutorVerificationServiceTest {
             VerificationSubmitRequest request = new VerificationSubmitRequest();
             request.setPassportUrl("https://example.com/new-passport.jpg");
             request.setSelfieUrl("https://example.com/new-selfie.jpg");
+            request.setCategoryIds(List.of(1L));
+
+            ExecutorProfile profile = ExecutorProfile.builder().user(user).availableForWork(true).build();
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(verificationRepository.findByUserId(1L)).thenReturn(Optional.of(verification));
             when(verificationRepository.save(any(ExecutorVerification.class))).thenReturn(verification);
+            when(executorProfileRepository.findById(1L)).thenReturn(Optional.empty());
+            when(executorProfileRepository.save(any(ExecutorProfile.class))).thenReturn(profile);
+            when(categoryRepository.findAllById(List.of(1L))).thenReturn(List.of());
 
             // When
             VerificationResponse result = verificationService.submitVerification(1L, request);

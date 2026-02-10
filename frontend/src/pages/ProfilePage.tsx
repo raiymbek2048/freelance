@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { User, Shield, Eye, EyeOff, Save, Mail, Phone, CheckCircle, Send, CreditCard, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { User, Shield, Eye, EyeOff, Save, Mail, Phone, CheckCircle, Send, CreditCard, Loader2, Grid3X3 } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { PageMeta } from '@/components/PageMeta';
 import { Button, Card, Input, Textarea, Toggle } from '@/components/ui';
@@ -9,11 +9,14 @@ import { usersApi } from '@/api/users';
 import type { UpdateProfileRequest } from '@/api/users';
 import { Navigate, Link } from 'react-router-dom';
 import { contactVerificationApi, type ContactVerificationType } from '@/api/contactVerification';
+import { executorsApi } from '@/api/executors';
+import { categoriesApi } from '@/api/categories';
 import { subscriptionApi } from '@/api/subscription';
 import { paymentApi } from '@/api/payment';
 
 export function ProfilePage() {
   const { user, isAuthenticated, fetchUser } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -21,6 +24,42 @@ export function ProfilePage() {
   const [bio, setBio] = useState(user?.bio || '');
   const [hideFromExecutorList, setHideFromExecutorList] = useState(user?.hideFromExecutorList || false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Category state
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [categorySaveSuccess, setCategorySaveSuccess] = useState(false);
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: categoriesApi.getAll,
+  });
+
+  const { data: executorProfile } = useQuery({
+    queryKey: ['myExecutorProfile'],
+    queryFn: executorsApi.getMyProfile,
+    enabled: isAuthenticated && user?.executorVerified === true,
+  });
+
+  useEffect(() => {
+    if (executorProfile?.categories) {
+      setSelectedCategoryIds(executorProfile.categories.map(c => c.id));
+    }
+  }, [executorProfile]);
+
+  const updateCategoriesMutation = useMutation({
+    mutationFn: (categoryIds: number[]) => executorsApi.updateCategories(categoryIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myExecutorProfile'] });
+      setCategorySaveSuccess(true);
+      setTimeout(() => setCategorySaveSuccess(false), 3000);
+    },
+  });
+
+  const toggleCategory = (id: number) => {
+    setSelectedCategoryIds(prev =>
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+    );
+  };
 
   // Contact verification states
   const [emailCode, setEmailCode] = useState('');
@@ -350,6 +389,56 @@ export function ProfilePage() {
                   </p>
                 </div>
               </div>
+
+              {/* Categories */}
+              {user?.executorVerified && (
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Grid3X3 className="w-4 h-4 text-gray-600" />
+                    <h3 className="font-medium text-gray-900">Категории работ</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-3">
+                    Выберите категории, в которых вы хотите работать
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+                    {categories.map((cat) => (
+                      <label
+                        key={cat.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedCategoryIds.includes(cat.id)
+                            ? 'border-cyan-400 bg-cyan-50'
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCategoryIds.includes(cat.id)}
+                          onChange={() => toggleCategory(cat.id)}
+                          className="w-4 h-4 rounded border-gray-400 text-cyan-600 focus:ring-cyan-500 accent-cyan-600"
+                        />
+                        <span className="text-sm font-medium text-gray-800">{cat.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => updateCategoriesMutation.mutate(selectedCategoryIds)}
+                      loading={updateCategoriesMutation.isPending}
+                      disabled={selectedCategoryIds.length === 0}
+                    >
+                      Сохранить категории
+                    </Button>
+                    {categorySaveSuccess && (
+                      <span className="text-green-600 text-sm font-medium">Категории сохранены!</span>
+                    )}
+                    {updateCategoriesMutation.isError && (
+                      <span className="text-red-600 text-sm">Ошибка сохранения</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
 

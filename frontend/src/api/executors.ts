@@ -59,6 +59,11 @@ export const executorsApi = {
     await apiClient.delete(`/portfolio/${id}`);
   },
 
+  updateCategories: async (categoryIds: number[]): Promise<ExecutorProfile> => {
+    const response = await apiClient.put<ExecutorProfile>('/executors/me/categories', categoryIds);
+    return response.data;
+  },
+
   getReviews: async (executorId: number, page = 0, size = 10): Promise<PageResponse<Review>> => {
     const response = await apiClient.get<PageResponse<Review>>(`/executors/${executorId}/reviews?page=${page}&size=${size}`);
     return response.data;

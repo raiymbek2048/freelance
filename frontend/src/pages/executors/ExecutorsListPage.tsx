@@ -6,15 +6,23 @@ import { Layout } from '@/components/layout';
 import { PageMeta } from '@/components/PageMeta';
 import { Button, Card, Input, Select, Avatar, Rating, Badge } from '@/components/ui';
 import { executorsApi } from '@/api/executors';
+import { categoriesApi } from '@/api/categories';
 import type { ExecutorFilters } from '@/types';
 
 export function ExecutorsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(0);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: categoriesApi.getAll,
+  });
 
   const filters: ExecutorFilters = {
     minRating: searchParams.get('minRating') ? Number(searchParams.get('minRating')) : undefined,
     search: searchParams.get('search') || undefined,
+    categoryId: selectedCategoryId,
   };
 
   const { data: executorsData, isLoading } = useQuery({
@@ -71,6 +79,24 @@ export function ExecutorsListPage() {
                 value={filters.search || ''}
                 onChange={(e) => updateFilter('search', e.target.value || undefined)}
               />
+            </div>
+            <div className="w-full sm:w-52 flex-shrink-0">
+              <div className="relative">
+                <select
+                  value={selectedCategoryId ?? ''}
+                  onChange={(e) => {
+                    setSelectedCategoryId(e.target.value ? Number(e.target.value) : undefined);
+                    setPage(0);
+                  }}
+                  className="w-full appearance-none pl-3 pr-8 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
+                >
+                  <option value="">Все категории</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+                <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </div>
             </div>
             <div className="w-full sm:w-48 flex-shrink-0">
               <Select

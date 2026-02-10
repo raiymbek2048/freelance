@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, MapPin, ChevronDown, ChevronUp, User, Clock, ChevronLeft, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, User, Clock, ChevronLeft, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/layout';
 import { PageMeta } from '@/components/PageMeta';
 import { Card } from '@/components/ui';
 import { ordersApi } from '@/api/orders';
+import { categoriesApi } from '@/api/categories';
 import { useAuthStore } from '@/stores/authStore';
 import type { OrderFilters } from '@/types';
 
@@ -37,12 +38,19 @@ export function OrdersListPage() {
   const [expandedOrder, setExpandedOrder] = useState<ExpandedOrder | null>(null);
   const [selectedCity, setSelectedCity] = useState('Все города');
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [respondedOrders, setRespondedOrders] = useState<Set<number>>(new Set());
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: categoriesApi.getAll,
+  });
 
   const filters: OrderFilters = {
     search: searchParams.get('search') || undefined,
     location: selectedCity !== 'Все города' ? selectedCity : undefined,
+    categoryId: selectedCategoryId,
   };
 
   const { data: ordersData, isLoading } = useQuery({
@@ -170,25 +178,39 @@ export function OrdersListPage() {
               </div>
             </form>
 
-            {/* City Filter */}
-            <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-2">
-              <MapPin className="w-4 h-4 text-gray-600 flex-shrink-0" />
-              {cities.map((city) => (
-                <button
-                  key={city}
-                  onClick={() => {
-                    setSelectedCity(city);
+            {/* Filters: Category + City */}
+            <div className="mb-4 flex gap-3">
+              <div className="relative flex-1">
+                <select
+                  value={selectedCategoryId ?? ''}
+                  onChange={(e) => {
+                    setSelectedCategoryId(e.target.value ? Number(e.target.value) : undefined);
                     setPage(0);
                   }}
-                  className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-                    selectedCity === city
-                      ? 'bg-cyan-500 text-white'
-                      : 'bg-white/80 text-gray-700 hover:bg-white'
-                  }`}
+                  className="w-full appearance-none pl-3 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
                 >
-                  {city}
-                </button>
-              ))}
+                  <option value="">Все категории</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+              <div className="relative flex-1">
+                <select
+                  value={selectedCity}
+                  onChange={(e) => {
+                    setSelectedCity(e.target.value);
+                    setPage(0);
+                  }}
+                  className="w-full appearance-none pl-3 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
+                >
+                  {cities.map((city) => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             {/* Results count */}

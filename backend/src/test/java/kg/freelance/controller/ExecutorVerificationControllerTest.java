@@ -104,6 +104,7 @@ class ExecutorVerificationControllerTest {
             VerificationSubmitRequest request = new VerificationSubmitRequest();
             request.setPassportUrl("https://s3.example.com/passport.jpg");
             request.setSelfieUrl("https://s3.example.com/selfie.jpg");
+            request.setCategoryIds(java.util.List.of(1L, 2L));
 
             VerificationResponse response = VerificationResponse.builder()
                     .status(VerificationStatus.PENDING)
@@ -125,6 +126,7 @@ class ExecutorVerificationControllerTest {
             VerificationSubmitRequest request = new VerificationSubmitRequest();
             request.setPassportUrl("https://s3.example.com/passport.jpg");
             request.setSelfieUrl("https://s3.example.com/selfie.jpg");
+            request.setCategoryIds(java.util.List.of(1L));
 
             when(verificationService.submitVerification(eq(1L), any()))
                     .thenThrow(new BadRequestException("Verification already pending"));

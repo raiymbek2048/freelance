@@ -10,6 +10,7 @@ import kg.freelance.entity.User;
 import kg.freelance.entity.enums.VerificationStatus;
 import kg.freelance.exception.BadRequestException;
 import kg.freelance.exception.ResourceNotFoundException;
+import kg.freelance.repository.CategoryRepository;
 import kg.freelance.repository.ExecutorProfileRepository;
 import kg.freelance.repository.ExecutorVerificationRepository;
 import kg.freelance.repository.UserRepository;
@@ -19,7 +20,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import kg.freelance.entity.Category;
+
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +32,7 @@ public class ExecutorVerificationService {
 
     private final ExecutorVerificationRepository verificationRepository;
     private final ExecutorProfileRepository executorProfileRepository;
+    private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
 
@@ -71,6 +77,22 @@ public class ExecutorVerificationService {
         verification.setReviewedBy(null);
 
         verificationRepository.save(verification);
+
+        // Save selected categories to executor profile
+        if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
+            ExecutorProfile profile = executorProfileRepository.findById(user.getId())
+                    .orElseGet(() -> {
+                        ExecutorProfile newProfile = ExecutorProfile.builder()
+                                .user(user)
+                                .availableForWork(true)
+                                .build();
+                        return executorProfileRepository.save(newProfile);
+                    });
+
+            List<Category> categories = categoryRepository.findAllById(request.getCategoryIds());
+            profile.setCategories(new HashSet<>(categories));
+            executorProfileRepository.save(profile);
+        }
 
         return mapToResponse(verification);
     }

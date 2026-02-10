@@ -4,6 +4,7 @@ import { Shield, Upload, CheckCircle, Clock, XCircle, Camera, FileText } from 'l
 import { Layout } from '@/components/layout';
 import { Button, Card } from '@/components/ui';
 import { verificationApi } from '@/api/verification';
+import { categoriesApi } from '@/api/categories';
 import { filesApi } from '@/api/files';
 import { useAuthStore } from '@/stores/authStore';
 import { Navigate } from 'react-router-dom';
@@ -48,6 +49,18 @@ export function VerificationPage() {
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [consentGiven, setConsentGiven] = useState(false);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: categoriesApi.getAll,
+  });
+
+  const toggleCategory = (id: number) => {
+    setSelectedCategoryIds(prev =>
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+    );
+  };
 
   const { data: status, isLoading } = useQuery({
     queryKey: ['verification-status'],
@@ -82,6 +95,7 @@ export function VerificationPage() {
       return verificationApi.submit({
         passportUrl: passportResult.url,
         selfieUrl: selfieResult.url,
+        categoryIds: selectedCategoryIds,
       });
     },
     onSuccess: () => {
@@ -90,6 +104,7 @@ export function VerificationPage() {
       setSelfieFile(null);
       setPassportPreview(null);
       setSelfiePreview(null);
+      setSelectedCategoryIds([]);
     },
     onError: (error: unknown) => {
       // Check for 413 Payload Too Large error
@@ -262,6 +277,40 @@ export function VerificationPage() {
               </div>
             </div>
 
+            {/* Category Selection */}
+            <div>
+              <h3 className="font-medium text-gray-900 mb-3">В каких категориях вы хотите работать?</h3>
+              <p className="text-sm text-gray-500 mb-3">Выберите минимум одну категорию. Вы сможете изменить их позже в настройках профиля.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {categories.map((cat) => (
+                  <label
+                    key={cat.id}
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      selectedCategoryIds.includes(cat.id)
+                        ? 'border-cyan-400 bg-cyan-50'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCategoryIds.includes(cat.id)}
+                      onChange={() => toggleCategory(cat.id)}
+                      className="w-4 h-4 rounded border-gray-400 text-cyan-600 focus:ring-cyan-500 accent-cyan-600"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-800">{cat.name}</span>
+                      {cat.description && (
+                        <p className="text-xs text-gray-500 mt-0.5">{cat.description}</p>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {selectedCategoryIds.length === 0 && (
+                <p className="text-xs text-amber-600 mt-2">Выберите хотя бы одну категорию</p>
+              )}
+            </div>
+
             {/* Privacy Notice */}
             <div className="bg-cyan-50 border border-cyan-300 rounded-lg p-4">
               <div className="flex items-start gap-3">
@@ -298,7 +347,7 @@ export function VerificationPage() {
               size="lg"
               onClick={() => submitMutation.mutate()}
               loading={submitMutation.isPending}
-              disabled={!passportFile || !selfieFile || !consentGiven}
+              disabled={!passportFile || !selfieFile || !consentGiven || selectedCategoryIds.length === 0}
             >
               <Upload className="w-5 h-5 mr-2" />
               Отправить на верификацию
