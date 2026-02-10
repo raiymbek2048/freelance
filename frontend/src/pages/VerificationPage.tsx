@@ -14,7 +14,7 @@ const statusConfig: Record<VerificationStatus, { icon: React.ReactNode; color: s
     icon: <Shield className="w-12 h-12 text-gray-400" />,
     color: 'bg-gray-50 border-gray-200',
     title: 'Верификация не пройдена',
-    description: 'Пройдите верификацию, чтобы видеть полное описание заказов и откликаться на них.',
+    description: 'Пройдите расширенную верификацию, чтобы повысить уровень доверия со стороны заказчиков и получить доступ к дополнительным возможностям платформы.',
   },
   PENDING: {
     icon: <Clock className="w-12 h-12 text-amber-500" />,
@@ -180,8 +180,8 @@ export function VerificationPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h3 className="font-medium text-blue-900 mb-2">Как пройти верификацию</h3>
               <ol className="list-decimal list-inside text-sm text-blue-800 space-y-1">
-                <li>Загрузите фото разворота паспорта (страница с фото)</li>
-                <li>Сделайте селфи с паспортом в руках</li>
+                <li>Загрузите фото документа, удостоверяющего личность (страница с фотографией)</li>
+                <li>Сделайте селфи для подтверждения личности</li>
                 <li>Отправьте заявку на проверку</li>
               </ol>
             </div>
@@ -216,12 +216,12 @@ export function VerificationPage() {
                       alt="Паспорт"
                       className="w-full h-32 object-cover rounded-lg mb-2"
                     />
-                    <p className="text-sm text-green-600 font-medium">Паспорт загружен</p>
+                    <p className="text-sm text-green-600 font-medium">Документ загружен</p>
                   </div>
                 ) : (
                   <div className="text-center">
                     <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="font-medium text-gray-700">Фото паспорта</p>
+                    <p className="font-medium text-gray-700">Фото документа</p>
                     <p className="text-sm text-gray-500 mt-1">Нажмите для загрузки</p>
                   </div>
                 )}
@@ -255,7 +255,7 @@ export function VerificationPage() {
                 ) : (
                   <div className="text-center">
                     <Camera className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="font-medium text-gray-700">Селфи с паспортом</p>
+                    <p className="font-medium text-gray-700">Фото для подтверждения</p>
                     <p className="text-sm text-gray-500 mt-1">Нажмите для загрузки</p>
                   </div>
                 )}
@@ -269,9 +269,10 @@ export function VerificationPage() {
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1">Конфиденциальность данных</h4>
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    Ваши паспортные данные будут использованы исключительно для подтверждения личности.
-                    Мы гарантируем полную конфиденциальность — данные хранятся в зашифрованном виде
-                    и не будут переданы третьим лицам.
+                    Предоставленные данные используются исключительно в целях подтверждения личности
+                    пользователя и повышения безопасности на платформе. Обработка персональных данных
+                    осуществляется в соответствии с законодательством Кыргызской Республики. Данные
+                    хранятся в защищённом виде и не передаются третьим лицам.
                   </p>
                 </div>
               </div>
@@ -287,7 +288,8 @@ export function VerificationPage() {
               />
               <span className="text-sm text-gray-700 leading-relaxed">
                 Я подтверждаю, что предоставленные данные являются достоверными, и даю согласие
-                на их обработку в целях верификации моей личности.
+                на их обработку в целях верификации моей личности в соответствии с{' '}
+                <a href="/privacy" className="text-cyan-600 underline hover:text-cyan-700">Политикой конфиденциальности</a>.
               </span>
             </label>
 
@@ -301,6 +303,11 @@ export function VerificationPage() {
               <Upload className="w-5 h-5 mr-2" />
               Отправить на верификацию
             </Button>
+
+            <p className="text-xs text-gray-500 text-center leading-relaxed">
+              Прохождение расширенной верификации является добровольным.
+              Пользователи без верификации могут пользоваться базовым функционалом платформы.
+            </p>
           </div>
         )}
       </div>
