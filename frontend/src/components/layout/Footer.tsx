@@ -23,7 +23,7 @@ export function Footer() {
             <h4 className="font-semibold text-gray-900 mb-4">Платформа</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/orders" className="text-gray-600 hover:text-gray-900">
+                <Link to="/" className="text-gray-600 hover:text-gray-900">
                   Задания
                 </Link>
               </li>

@@ -9,6 +9,7 @@ import kg.freelance.entity.enums.NotificationType;
 import kg.freelance.exception.ResourceNotFoundException;
 import kg.freelance.repository.NotificationRepository;
 import kg.freelance.service.InAppNotificationService;
+import kg.freelance.service.PushNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,7 +17,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +28,7 @@ public class InAppNotificationServiceImpl implements InAppNotificationService {
 
     private final NotificationRepository notificationRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final PushNotificationService pushNotificationService;
 
     @Override
     @Transactional
@@ -46,6 +50,17 @@ public class InAppNotificationServiceImpl implements InAppNotificationService {
                 "/queue/notifications",
                 response
         );
+
+        // Send FCM push notification
+        Map<String, String> pushData = new HashMap<>();
+        pushData.put("type", type.name());
+        if (order != null) {
+            pushData.put("orderId", order.getId().toString());
+        }
+        if (link != null) {
+            pushData.put("link", link);
+        }
+        pushNotificationService.sendPush(recipient, title, message, pushData);
     }
 
     @Override

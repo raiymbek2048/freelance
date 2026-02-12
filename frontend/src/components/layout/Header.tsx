@@ -41,7 +41,7 @@ export function Header() {
           {/* Desktop Navigation - Center */}
           <nav className="hidden md:flex items-center gap-2">
             <Link
-              to="/orders"
+              to="/"
               className="px-4 py-2 bg-white/90 text-gray-700 rounded-lg text-sm font-medium hover:bg-white transition-colors"
             >
               Задания
@@ -72,7 +72,7 @@ export function Header() {
               to="/orders/create"
               className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-medium hover:bg-cyan-700 transition-colors"
             >
-              Дать задание
+              Создать задание
             </Link>
             {isAuthenticated ? (
               <div className="flex items-center gap-2">
@@ -185,13 +185,13 @@ export function Header() {
             )}
           </div>
 
-          {/* Mobile: Дать задание button + menu button */}
+          {/* Mobile: Create order button + menu button */}
           <div className="md:hidden flex items-center gap-2">
             <Link
               to="/orders/create"
               className="px-3 py-1.5 bg-white text-cyan-600 rounded-lg text-sm font-medium"
             >
-              Дать задание
+              Создать задание
             </Link>
             <button
               className="p-2 text-white"
@@ -293,13 +293,6 @@ export function Header() {
               >
                 Объявление
               </Link>
-              <Link
-                to="/orders/create"
-                className="block py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Дать задание
-              </Link>
               {isAuthenticated && (
                 <>
                   <Link
@@ -332,7 +325,7 @@ export function Header() {
                 </>
               )}
               <Link
-                to="/orders"
+                to="/"
                 className="block py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >

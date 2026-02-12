@@ -1,5 +1,6 @@
 package kg.freelance.dto.response;
 
+import kg.freelance.entity.enums.OrderStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,6 +13,8 @@ public class OrderResponseDto {
 
     private Long id;
     private Long orderId;
+    private String orderTitle;
+    private OrderStatus orderStatus;
     private Long executorId;
     private String executorName;
     private String executorAvatarUrl;

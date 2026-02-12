@@ -718,6 +718,8 @@ public class OrderServiceImpl implements OrderService {
         return OrderResponseDto.builder()
                 .id(response.getId())
                 .orderId(response.getOrder().getId())
+                .orderTitle(response.getOrder().getTitle())
+                .orderStatus(response.getOrder().getStatus())
                 .executorId(executor.getId())
                 .executorName(executor.getFullName())
                 .executorAvatarUrl(executor.getAvatarUrl())

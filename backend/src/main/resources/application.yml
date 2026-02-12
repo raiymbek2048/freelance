@@ -114,6 +114,9 @@ management:
     mail:
       enabled: false
 
+fcm:
+  credentials-path: ${FCM_CREDENTIALS_PATH:src/main/resources/firebase-service-account.json}
+
 logging:
   level:
     kg.freelance: DEBUG

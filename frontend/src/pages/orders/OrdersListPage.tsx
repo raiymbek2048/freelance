@@ -149,10 +149,10 @@ export function OrdersListPage() {
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-xl font-bold text-gray-800">Все задания</h1>
               <Link
-                to="/orders/create"
+                to="/my-orders"
                 className="px-4 py-2 bg-cyan-500 text-white rounded-lg text-sm font-medium hover:bg-cyan-600 transition-colors"
               >
-                Создать задание
+                Мои задания
               </Link>
             </div>
 
@@ -266,10 +266,10 @@ export function OrdersListPage() {
                         <ChevronDown className="w-4 h-4 text-gray-400" />
                       )}
                     </div>
-                    <h3 className="font-bold text-gray-900 mb-1 break-words line-clamp-2">{order.title}</h3>
+                    <h3 className={`font-bold text-gray-900 mb-1 break-words ${isExpanded ? '' : 'line-clamp-2'}`}>{order.title}</h3>
                     {/* Description preview */}
                     {order.description && (
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2 break-words">
+                      <p className={`text-sm text-gray-600 mb-2 break-words ${isExpanded ? '' : 'line-clamp-2'}`}>
                         {order.description}
                       </p>
                     )}

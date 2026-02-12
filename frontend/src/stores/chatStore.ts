@@ -167,7 +167,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (stompClient && stompClient.connected) {
       stompClient.publish({
         destination: `/app/chat/${chatRoomId}/typing`,
-        body: '',
+        body: JSON.stringify({ isTyping: true }),
       });
     }
   },

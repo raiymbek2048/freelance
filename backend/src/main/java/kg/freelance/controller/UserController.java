@@ -8,11 +8,14 @@ import kg.freelance.dto.request.PasswordChangeRequest;
 import kg.freelance.dto.request.UserUpdateRequest;
 import kg.freelance.dto.response.UserResponse;
 import kg.freelance.security.UserPrincipal;
+import kg.freelance.service.PushNotificationService;
 import kg.freelance.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final PushNotificationService pushNotificationService;
 
     @GetMapping("/me")
     @Operation(summary = "Get current user", description = "Get authenticated user's profile")
@@ -53,5 +57,17 @@ public class UserController {
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         UserResponse response = userService.getCurrentUser(id);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/me/fcm-token")
+    @Operation(summary = "Update FCM token", description = "Register or update device FCM token for push notifications")
+    public ResponseEntity<Void> updateFcmToken(
+            @AuthenticationPrincipal UserPrincipal user,
+            @RequestBody Map<String, String> body) {
+        String token = body.get("token");
+        if (token != null && !token.isBlank()) {
+            pushNotificationService.updateFcmToken(user.getId(), token);
+        }
+        return ResponseEntity.ok().build();
     }
 }

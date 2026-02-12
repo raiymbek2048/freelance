@@ -81,6 +81,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/verification/submit").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/files/**").authenticated()
 
+                        // Deep link verification
+                        .requestMatchers("/.well-known/**").permitAll()
+
                         // WebSocket
                         .requestMatchers("/ws/**").permitAll()
 

@@ -5,7 +5,6 @@ import { Helmet } from 'react-helmet-async';
 import { useAuthStore } from '@/stores/authStore';
 
 // Pages
-import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { OAuthCallbackPage } from '@/pages/auth/OAuthCallbackPage';
@@ -104,11 +103,11 @@ function AppContent() {
     />
     <Routes>
       {/* Public routes */}
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<OrdersListPage />} />
+      <Route path="/orders" element={<Navigate to="/" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
-      <Route path="/orders" element={<OrdersListPage />} />
       <Route path="/orders/:id" element={<OrderDetailPage />} />
       <Route path="/executors" element={<ExecutorsListPage />} />
       <Route path="/executors/:id" element={<ExecutorDetailPage />} />

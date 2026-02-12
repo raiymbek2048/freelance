@@ -89,6 +89,9 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "fcm_token", length = 500)
+    private String fcmToken;
+
     // Relationships
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private ExecutorProfile executorProfile;
