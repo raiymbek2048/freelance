@@ -17,7 +17,6 @@ import kg.freelance.repository.UserRepository;
 import kg.freelance.service.ChatService;
 import kg.freelance.websocket.dto.WsMessage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -26,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -71,37 +71,26 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public ChatRoomResponse getOrCreateChatRoom(Long orderId, Long executorId, Long clientId) {
         // Check if chat room already exists
-        return chatRoomRepository.findByOrderIdAndExecutorId(orderId, executorId)
-                .map(room -> mapToChatRoomResponse(room, clientId))
-                .orElseGet(() -> {
-                    // Create new chat room
-                    Order order = orderRepository.findById(orderId)
-                            .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+        Optional<ChatRoom> existing = chatRoomRepository.findByOrderId(orderId);
+        if (existing.isPresent()) {
+            return mapToChatRoomResponse(existing.get(), clientId);
+        }
 
-                    User executor = userRepository.findById(executorId)
-                            .orElseThrow(() -> new ResourceNotFoundException("User", "id", executorId));
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
 
-                    // Verify that the client owns the order
-                    if (!order.getClient().getId().equals(clientId)) {
-                        throw new ForbiddenException("You are not the owner of this order");
-                    }
+        // Verify that the client owns the order
+        if (!order.getClient().getId().equals(clientId)) {
+            throw new ForbiddenException("You are not the owner of this order");
+        }
 
-                    try {
-                        ChatRoom newRoom = ChatRoom.builder()
-                                .order(order)
-                                .client(order.getClient())
-                                .executor(executor)
-                                .build();
+        // Native INSERT ... ON CONFLICT DO NOTHING — no exception on duplicate
+        chatRoomRepository.insertIfNotExists(orderId, order.getClient().getId(), executorId);
 
-                        newRoom = chatRoomRepository.save(newRoom);
-                        return mapToChatRoomResponse(newRoom, clientId);
-                    } catch (DataIntegrityViolationException e) {
-                        // Race condition: another thread created the room first
-                        return chatRoomRepository.findByOrderIdAndExecutorId(orderId, executorId)
-                                .map(room -> mapToChatRoomResponse(room, clientId))
-                                .orElseThrow(() -> new ResourceNotFoundException("ChatRoom", "orderId", orderId));
-                    }
-                });
+        // Fetch the room (either just created or already existed from concurrent request)
+        ChatRoom room = chatRoomRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("ChatRoom", "orderId", orderId));
+        return mapToChatRoomResponse(room, clientId);
     }
 
     @Override
