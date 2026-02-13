@@ -54,7 +54,7 @@ services:
       FREEDOMPAY_API_URL: ${FREEDOMPAY_API_URL:-https://api.freedompay.kg}
       FREEDOMPAY_TEST_MODE: ${FREEDOMPAY_TEST_MODE:-true}
     ports:
-      - "${BACKEND_PORT:-8080}:8080"
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
     volumes:
       - uploads_data:/app/uploads
     networks:
@@ -81,6 +81,9 @@ services:
         condition: service_healthy
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - freelance-network
     healthcheck:

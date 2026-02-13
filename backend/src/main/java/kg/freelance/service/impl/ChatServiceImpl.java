@@ -17,6 +17,7 @@ import kg.freelance.repository.UserRepository;
 import kg.freelance.service.ChatService;
 import kg.freelance.websocket.dto.WsMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -85,14 +86,21 @@ public class ChatServiceImpl implements ChatService {
                         throw new ForbiddenException("You are not the owner of this order");
                     }
 
-                    ChatRoom newRoom = ChatRoom.builder()
-                            .order(order)
-                            .client(order.getClient())
-                            .executor(executor)
-                            .build();
+                    try {
+                        ChatRoom newRoom = ChatRoom.builder()
+                                .order(order)
+                                .client(order.getClient())
+                                .executor(executor)
+                                .build();
 
-                    newRoom = chatRoomRepository.save(newRoom);
-                    return mapToChatRoomResponse(newRoom, clientId);
+                        newRoom = chatRoomRepository.save(newRoom);
+                        return mapToChatRoomResponse(newRoom, clientId);
+                    } catch (DataIntegrityViolationException e) {
+                        // Race condition: another thread created the room first
+                        return chatRoomRepository.findByOrderIdAndExecutorId(orderId, executorId)
+                                .map(room -> mapToChatRoomResponse(room, clientId))
+                                .orElseThrow(() -> new ResourceNotFoundException("ChatRoom", "orderId", orderId));
+                    }
                 });
     }
 

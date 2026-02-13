@@ -19,6 +19,7 @@ import kg.freelance.service.SubscriptionService;
 import kg.freelance.entity.enums.NotificationType;
 import kg.freelance.websocket.dto.WsMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -181,12 +182,17 @@ public class OrderServiceImpl implements OrderService {
         // Get or create chat room
         ChatRoom chatRoom = chatRoomRepository.findByOrderIdAndExecutorId(orderId, executor.getId())
                 .orElseGet(() -> {
-                    ChatRoom newRoom = ChatRoom.builder()
-                            .order(order)
-                            .client(order.getClient())
-                            .executor(executor)
-                            .build();
-                    return chatRoomRepository.save(newRoom);
+                    try {
+                        ChatRoom newRoom = ChatRoom.builder()
+                                .order(order)
+                                .client(order.getClient())
+                                .executor(executor)
+                                .build();
+                        return chatRoomRepository.save(newRoom);
+                    } catch (DataIntegrityViolationException e) {
+                        return chatRoomRepository.findByOrderId(orderId)
+                                .orElseThrow(() -> new ResourceNotFoundException("ChatRoom", "orderId", orderId));
+                    }
                 });
 
         // Send system message to notify executor
