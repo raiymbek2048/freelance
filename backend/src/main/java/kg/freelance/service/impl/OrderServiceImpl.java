@@ -180,7 +180,7 @@ public class OrderServiceImpl implements OrderService {
 
         // Get or create chat room (native INSERT ON CONFLICT to avoid Hibernate session corruption)
         chatRoomRepository.insertIfNotExists(orderId, order.getClient().getId(), executor.getId());
-        ChatRoom chatRoom = chatRoomRepository.findByOrderId(orderId)
+        ChatRoom chatRoom = chatRoomRepository.findByOrderIdAndExecutorId(orderId, executor.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("ChatRoom", "orderId", orderId));
 
         // Send system message to notify executor

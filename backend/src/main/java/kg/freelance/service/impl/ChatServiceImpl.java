@@ -70,8 +70,8 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatRoomResponse getOrCreateChatRoom(Long orderId, Long executorId, Long clientId) {
-        // Check if chat room already exists
-        Optional<ChatRoom> existing = chatRoomRepository.findByOrderId(orderId);
+        // Check if chat room already exists for this order+executor pair
+        Optional<ChatRoom> existing = chatRoomRepository.findByOrderIdAndExecutorId(orderId, executorId);
         if (existing.isPresent()) {
             return mapToChatRoomResponse(existing.get(), clientId);
         }
@@ -88,7 +88,7 @@ public class ChatServiceImpl implements ChatService {
         chatRoomRepository.insertIfNotExists(orderId, order.getClient().getId(), executorId);
 
         // Fetch the room (either just created or already existed from concurrent request)
-        ChatRoom room = chatRoomRepository.findByOrderId(orderId)
+        ChatRoom room = chatRoomRepository.findByOrderIdAndExecutorId(orderId, executorId)
                 .orElseThrow(() -> new ResourceNotFoundException("ChatRoom", "orderId", orderId));
         return mapToChatRoomResponse(room, clientId);
     }

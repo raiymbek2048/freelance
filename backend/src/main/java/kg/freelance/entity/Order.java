@@ -102,8 +102,9 @@ public class Order {
     @Builder.Default
     private List<OrderResponse> responses = new ArrayList<>();
 
-    @OneToOne(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private ChatRoom chatRoom;
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<ChatRoom> chatRooms = new ArrayList<>();
 
     @OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
     private Review review;

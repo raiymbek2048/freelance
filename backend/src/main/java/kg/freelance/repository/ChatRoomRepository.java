@@ -21,7 +21,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     @Modifying
     @Query(value = "INSERT INTO chat_rooms (order_id, client_id, executor_id, created_at) " +
                    "VALUES (:orderId, :clientId, :executorId, CURRENT_TIMESTAMP) " +
-                   "ON CONFLICT (order_id) DO NOTHING", nativeQuery = true)
+                   "ON CONFLICT (order_id, executor_id) DO NOTHING", nativeQuery = true)
     void insertIfNotExists(@Param("orderId") Long orderId,
                            @Param("clientId") Long clientId,
                            @Param("executorId") Long executorId);
