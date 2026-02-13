@@ -45,11 +45,14 @@ export function ChatPage() {
   }, []);
 
   useEffect(() => {
-    if (initialChatId && !activeChatId) {
-      setActiveChat(Number(initialChatId));
+    if (initialChatId) {
+      const targetId = Number(initialChatId);
+      if (targetId !== activeChatId) {
+        setActiveChat(targetId);
+      }
       setMobileShowChat(true);
     }
-  }, [initialChatId, activeChatId]);
+  }, [initialChatId]);
 
   const handleSelectChat = (chatId: number) => {
     setActiveChat(chatId);

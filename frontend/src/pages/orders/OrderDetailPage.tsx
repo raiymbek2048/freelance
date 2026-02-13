@@ -109,10 +109,16 @@ export function OrderDetailPage() {
     },
   });
 
+  const [chatError, setChatError] = useState('');
+
   const startChatMutation = useMutation({
     mutationFn: (executorId: number) => chatApi.getOrCreateChat(Number(id), executorId),
     onSuccess: (chatRoom) => {
+      setChatError('');
       navigate(`/chats?room=${chatRoom.id}`);
+    },
+    onError: (error: Error) => {
+      setChatError(error.message || 'Не удалось начать чат');
     },
   });
 
@@ -344,7 +350,10 @@ export function OrderDetailPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => startChatMutation.mutate(response.executorId)}
+                          onClick={() => {
+                            setChatError('');
+                            startChatMutation.mutate(response.executorId);
+                          }}
                           loading={startChatMutation.isPending}
                         >
                           <MessageSquare className="w-4 h-4 mr-1" /> Написать
@@ -353,6 +362,9 @@ export function OrderDetailPage() {
                     </div>
                   ))}
                 </div>
+                {chatError && (
+                  <p className="mt-3 text-sm text-red-600">{chatError}</p>
+                )}
               </Card>
             )}
 
